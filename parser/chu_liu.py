@@ -26,11 +26,10 @@ new_node_id = [111111]
 
 
 class Digraph:
-    '''We represent directed graphs using a map of outgoing edges for each node.
-    '''
+    """We represent directed graphs using a map of outgoing edges for each node."""
 
     def __init__(self, successors, get_score=None, get_label=None, node_id=None):
-        '''Initialize this digraph using a successors map and a score function.
+        """Initialize this digraph using a successors map and a score function.
 
         successors: A map from source node ids to lists of target nodes that can
           be reached from each source node. For instance, {1: [2], 2: [1, 3],
@@ -41,10 +40,10 @@ class Digraph:
         get_score: A callable that takes two node ids and returns a scalar
           score for the directed edge between those two nodes. Defaults to a
           static function where all edges have score 0.
-        '''
+        """
         self.successors = successors
         self.get_score = get_score
-        if node_id == None:
+        if node_id is None:
             self.new_node_id = new_node_id[:]
         else:
             self.new_node_id = node_id
@@ -55,23 +54,23 @@ class Digraph:
             self.get_label = lambda s, t: ''
 
     def __contains__(self, x):
-        '''Return True iff x is a node in our Digraph.'''
+        """Return True iff x is a node in our Digraph."""
         return x in self.successors
 
     def __iter__(self):
-        '''Iterate over the nodes in our graph.'''
+        """Iterate over the nodes in our graph."""
         return iter(self.successors)
 
     def num_nodes(self):
-        '''Return the number of nodes in this Digraph.'''
+        """Return the number of nodes in this Digraph."""
         return len(self.successors)
 
     def num_edges(self):
-        '''Return the number of edges in this Digraph.'''
+        """Return the number of edges in this Digraph."""
         return sum(1 for _ in self.iteredges())
 
     def dot(self, name):
-        '''Get this graph as a dot string.'''
+        """Get this graph as a dot string."""
         nodes = ' '.join('_%s_%s;' % (x, name) for x in self)
         edges = ' '.join(
             '_%s_%s -> _%s_%s [label="%.2f/%s"];' % (
@@ -80,16 +79,16 @@ class Digraph:
         return 'digraph _%s {%s %s}' % (name, nodes, edges)
 
     def iteredges(self):
-        '''Iterate over the pairs of node ids in all edges in this Digraph.'''
+        """Iterate over the pairs of node ids in all edges in this Digraph."""
         for source, targets in self.successors.items():
             for target in targets:
                 yield source, target
 
     def mst(self):
-        '''Return the MST of this Digraph using the Chu-Liu-Edmonds algorithm.
+        """Return the MST of this Digraph using the Chu-Liu-Edmonds algorithm.
 
         Returns a new Digraph.
-        '''
+        """
         mark = self.new_node_id[0]
         candidate = self.greedy()
         cycle = candidate.find_cycle()
@@ -100,7 +99,7 @@ class Digraph:
         return merged
 
     def find_cycle(self):
-        '''Find and return a cycle in our Digraph, or None.'''
+        """Find and return a cycle in our Digraph, or None."""
         # from guido's blog :
         # http://neopythonic.blogspot.com/2009/01/detecting-cycles-in-directed-graph.html
         worklist = set(self.successors)
@@ -126,12 +125,12 @@ class Digraph:
         return None
 
     def contract(self, cycle):
-        '''Given a cycle in our graph, contract it into a single node.
+        """Given a cycle in our graph, contract it into a single node.
 
         Returns a tuple (id, graph). The graph is a new Digraph instance
         containing no nodes from the cycle, with one extra new node created to
         represent the cycle. The id is the id of the new node.
-        '''
+        """
         # create a new id to represent the cycle in the resulting graph.
         new_id = self.new_node_id[0]
         self.new_node_id[0] += 1
@@ -204,10 +203,10 @@ class Digraph:
         return new_id, old_edges, Digraph(succs,
                                           lambda s, t: scores[s, t],
                                           lambda s, t: labels[s, t],
-										  node_id=self.new_node_id)
+                                          node_id=self.new_node_id)
 
     def merge(self, mst, new_id, old_edges, cycle):
-        '''Merge the nodes in an MST that were contracted from a cycle.
+        """Merge the nodes in an MST that were contracted from a cycle.
 
         We want to merge the information from the mst and the cycle into our
         graph to yield a subset of our original edges, using only edges from the
@@ -223,7 +222,7 @@ class Digraph:
         cycle: A Digraph containing nodes and edges in a cycle of our graph.
 
         Return a new Digraph containing the merged nodes and edges.
-        '''
+        """
         succs = dict((n, []) for n in self)
         for source, target in mst.iteredges():
             if source == new_id:
@@ -257,7 +256,7 @@ class Digraph:
         return Digraph(succs, self.get_score, self.get_label)
 
     def greedy(self):
-        '''Return a Digraph consisting of the max scoring edge for each node.'''
+        """Return a Digraph consisting of the max scoring edge for each node."""
         # for each node, find the incoming link with the highest score.
         max_scores = {}
         max_sources = {}
