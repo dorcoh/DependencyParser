@@ -63,8 +63,6 @@ class FeatureFunction(ABC):
 
 
 class ParentWordPos(FeatureFunction):
-    def __init__(self, name, data):
-        super().__init__(name, data)
 
     def extract_key(self, tup, sentence):
         parentid = int(tup[3]) - 1
