@@ -8,10 +8,14 @@ class FeatureFunction(ABC):
         self.name = name
         self.data = self.preprocess(data)
 
-    @abstractmethod
     def preprocess(self, data):
-        """preprocess train data"""
-        pass
+        for sentence in data:
+            for tup in sentence:
+                key = self.extract_key(tup, sentence)
+                if key in self.feature_dict:
+                    self.feature_dict[key] += 1
+                else:
+                    self.feature_dict[key] = 1
 
     def filter_features(self, min_count):
         to_remove = []
@@ -68,15 +72,6 @@ class ParentWordPos(FeatureFunction):
         parent_pos = sentence[parentid][2]
         key = (parent_word, parent_pos)
         return key
-
-    def preprocess(self, data):
-        for sentence in data:
-            for tup in sentence:
-                key = self.extract_key(tup, sentence)
-                if key in self.feature_dict:
-                    self.feature_dict[key] += 1
-                else:
-                    self.feature_dict[key] = 1
 
 
 def init_feature_functions(train_data, filter_dict):
