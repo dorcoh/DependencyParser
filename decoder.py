@@ -62,3 +62,14 @@ class Data(Dataset):
                     sentence.append([row[0], row[1], row[3], row[6]])
                 else:
                     sentence.append([row[0], row[1], row[3]])
+
+    def get_ground_tree(self):
+        tree = []
+
+        for sentence in self:
+            tmp = {}
+            for word in sentence:
+                tmp[word[0]] = [word[3]]
+            tree.append(tmp)
+
+        return tree
