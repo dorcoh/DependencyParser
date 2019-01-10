@@ -1,6 +1,6 @@
 from abc import ABC, abstractmethod
 from scipy.sparse import csr_matrix
-
+import copy
 
 class FeatureFunction(ABC):
     def __init__(self, name, data):
@@ -61,21 +61,66 @@ class FeatureFunction(ABC):
         del temp_dict
         return data, row, col
 
+    def get_enabled_feature(self, sentence, child, parent_id, idx_dict):
+        """Returns enable feature id for (parent, child), if empty returns None"""
+        child = copy.copy(child)
+        child[3] = parent_id  # TODO: validate that child won't change its value outside func
+        key = self.extract_key(child, sentence)
+        if not key in self.feature_dict:
+            return None
+        return idx_dict[key]
+
 
 class ParentWordPos(FeatureFunction):
 
     def extract_key(self, tup, sentence):
-        parentid = int(tup[3]) - 1
-        parent_word = sentence[parentid][1]
-        parent_pos = sentence[parentid][2]
+        parent_id = int(tup[3]) - 1
+        parent_word = sentence[parent_id][1]
+        parent_pos = sentence[parent_id][2]
         key = (parent_word, parent_pos)
+        return key
+
+
+class ParentWord(FeatureFunction):
+
+    def extract_key(self, tup, sentence):
+        parent_id  = int(tup[3]) - 1
+        parent_word = sentence[parent_id][1]
+        key = (parent_word)
+        return key
+
+
+class ParentPos(FeatureFunction):
+
+    def extract_key(self, tup, sentence):
+        parent_id = int(tup[3]) - 1
+        parent_pos = sentence[parent_id][2]
+        key = (parent_pos)
+        return key
+
+
+class ChildWordPos(FeatureFunction):
+
+    def extract_key(self, tup, sentence):
+        child_word = tup[1]
+        child_pos = tup[2] - 1
+        key = (child_word, child_pos)
+        return key
+
+
+class ChildWord(FeatureFunction):
+
+    def extract_key(self, tup, sentence):
+        child_word = tup[1]
+        key = (child_word)
         return key
 
 
 def init_feature_functions(train_data, filter_dict):
     # init all functions
     callables_dict = {
-        'parent_word_pos': ParentWordPos
+        'parent_word_pos': ParentWordPos,
+        'parent_word': ParentWord
     }
     for name, callable in callables_dict.items():
         callables_dict[name] = callable(name, train_data)
@@ -102,18 +147,31 @@ def compute_features_size(callables_dict):
     return m
 
 
+def get_edge_features(sentence, child, parent_id, callables_dict, idx_dict):
+    feature_indices = []
+    for name, feature_function in callables_dict.items():
+        feature_id = feature_function.get_enabled_feature(sentence, child, parent_id, idx_dict)
+        if feature_id:
+            feature_indices.append(feature_id)
+
+    return feature_indices
+
+
 if __name__ == '__main__':
     # test
     from decoder import Data
 
     data = Data('resources/test.labeled')
     filter_dict = {
-        'parent_word_pos': 3
+        'parent_word_pos': 3,
+        'parent_word': 3
     }
     callables_dict, idx_dict = init_feature_functions(data, filter_dict)
     m = compute_features_size(callables_dict)
     for sent in data:
         data, row, col = [], [], []
+        # test for one child,parent
+        features_ids = get_edge_features(sent, sent[0], 4, callables_dict, idx_dict)
         for name, feature_function in callables_dict.items():
             data_tmp, row_tmp, col_tmp = feature_function(sentence=sent, idx_dict=idx_dict)
             data += data_tmp
