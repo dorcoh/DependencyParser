@@ -59,7 +59,7 @@ class Data(Dataset):
                 sentence = []
             else:
                 if not self.comp:
-                    sentence.append([row[0], row[1], row[3], row[6]])
+                    sentence.append([row[0], row[1], row[3], str(int(row[6]) - 1)])
                 else:
                     sentence.append([row[0], row[1], row[3]])
 

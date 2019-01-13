@@ -1,10 +1,10 @@
-from features import ParentWordPos
+from features import ParentWordPos, get_edge_features, init_feature_functions
 import chu_liu
 import numpy as np
 
 
 class Perceptron:
-    def __init__(self, sentences, x, y, ground_graphs, num_iter=10):
+    def __init__(self, sentences, x, y, ground_graphs, data, filter_dict, num_iter=10):
         self.num_iter = num_iter
         self.w = np.zeros(len(x[0]))
         self.sentences = sentences
@@ -12,23 +12,22 @@ class Perceptron:
         self.y = y
         self.features_idx = []
         self.ground_graphs = ground_graphs
-
-    @staticmethod
-    def get_edge_features(child, parent, sentence):
-        return {}
+        self.callables_dict, self.idx_dict = init_feature_functions(data, filter_dict)
 
     def sentence_to_graph(self, sentence):
         graph = {0: {}}
         for key, item in enumerate(sentence):
             if key != 0:
                 graph[key] = {}
-                graph[0][key] = self.get_edge_features(sentence[key], item[0], sentence)
+                graph[0][key] = get_edge_features(sentence[key], item[0], sentence,
+                                                  self.callables_dict, self.idx_dict)
 
         for child in sentence:
             for parent in sentence:
                 if child == parent or child == 0 or parent == 0:
                     continue
-                graph[parent][child] = self.get_edge_features(sentence[child], sentence[parent], sentence)
+                graph[parent][child] = get_edge_features(sentence[child], sentence[parent],
+                                                         sentence, self.callables_dict, self.idx_dict)
 
         return graph
 
@@ -36,13 +35,20 @@ class Perceptron:
         features = []
         for vertex, edges in graph.items():
             for neigh in edges:
-                features += self.get_edge_features(sentence[neigh], sentence[vertex], sentence)
+                features += get_edge_features(sentence[neigh], sentence[vertex], sentence,
+                                              self.callables_dict, self.idx_dict)
 
         return features
 
-    @staticmethod
-    def sentence_to_features(sentence):
-        return {}
+    def sentence_to_features(self, sentence):
+        features = []
+        sentence[0] = 0
+        for idx, word in sentence.items():
+            if idx == 0:
+                continue
+            features += get_edge_features(word, sentence[word.parent], sentence, self.callables_dict, self.idx_dict)
+
+        return features
 
     def get_weighted_graph(self, graph):
         weighted_graph = {}
@@ -53,6 +59,7 @@ class Perceptron:
 
     def fit(self):
         graphs = []
+
         for sentence in self.sentences:
             graphs.append([sentence, self.sentence_to_features(sentence), self.sentence_to_graph(sentence)])
 
