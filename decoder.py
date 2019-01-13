@@ -52,14 +52,20 @@ class Dataset(object):
 class Data(Dataset):
     def __iter__(self):
         txt = get_text_file(self.filename)
-        sentence = []
+        sentence = {}
         for row in txt:
             if not row:
                 yield sentence
-                sentence = []
+                sentence = {}
             else:
                 if not self.comp:
-                    sentence.append([row[0], row[1], row[3], str(int(row[6]) - 1)])
+                    if row[0] == '1':
+                        # sentence.append(['-1', 'ROOT', 'ROOT', '-2'])
+                        sentence[0] = [0, 'ROOT', 'ROOT', 0]
+                        sentence[int(row[0])] = [int(row[0]), row[1], row[3], int(row[6])]
+
+                    else:
+                        sentence[int(row[0])] = [int(row[0]), row[1], row[3], int(row[6])]
                 else:
                     sentence.append([row[0], row[1], row[3]])
 

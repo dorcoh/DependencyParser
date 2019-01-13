@@ -10,8 +10,8 @@ class FeatureFunction(ABC):
 
     def preprocess(self, data):
         for sentence in data:
-            for tup in sentence:
-                key = self.extract_key(tup, sentence)
+            for i in range(1, len(sentence.keys())):
+                key = self.extract_key(sentence[i], sentence)
                 if key in self.feature_dict:
                     self.feature_dict[key] += 1
                 else:
@@ -84,7 +84,7 @@ class ParentWordPos(FeatureFunction):
 class ParentWord(FeatureFunction):
 
     def extract_key(self, tup, sentence):
-        parent_id  = int(tup[3])
+        parent_id = int(tup[3])
         parent_word = sentence[parent_id][1]
         key = (parent_word)
         return key

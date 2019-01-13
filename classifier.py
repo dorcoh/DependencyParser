@@ -4,49 +4,48 @@ import numpy as np
 
 
 class Perceptron:
-    def __init__(self, sentences, x, y, ground_graphs, data, filter_dict, num_iter=10):
+    def __init__(self, sentences, ground_graphs, filter_dict, num_iter=10):
         self.num_iter = num_iter
-        self.w = np.zeros(len(x[0]))
         self.sentences = sentences
-        self.x = x
-        self.y = y
         self.features_idx = []
         self.ground_graphs = ground_graphs
-        self.callables_dict, self.idx_dict = init_feature_functions(data, filter_dict)
+        self.callables_dict, self.idx_dict = init_feature_functions(sentences, filter_dict)
+        self.w = np.zeros(len(self.idx_dict.keys()))
 
     def sentence_to_graph(self, sentence):
         graph = {0: {}}
-        for key, item in enumerate(sentence):
+        for key, item in sentence.items():
             if key != 0:
                 graph[key] = {}
-                graph[0][key] = get_edge_features(sentence[key], item[0], sentence,
+                graph[0][key] = get_edge_features(sentence, item, item[3],
                                                   self.callables_dict, self.idx_dict)
 
-        for child in sentence:
-            for parent in sentence:
-                if child == parent or child == 0 or parent == 0:
+        for child in sentence.values():
+            for parent in sentence.values():
+                if child[0] == parent[0] or child[0] == -1 or parent[0] == -1:
                     continue
-                graph[parent][child] = get_edge_features(sentence[child], sentence[parent],
-                                                         sentence, self.callables_dict, self.idx_dict)
+                if parent[0] not in graph:
+                    graph[parent[0]] = {}
+                graph[parent[0]][child[0]] = get_edge_features(sentence, child, parent[0],
+                                                         self.callables_dict, self.idx_dict)
 
         return graph
 
     def graph_to_features(self, graph, sentence):
         features = []
-        for vertex, edges in graph.items():
+        for vertex, edges in graph.successors.items():
             for neigh in edges:
-                features += get_edge_features(sentence[neigh], sentence[vertex], sentence,
+                features += get_edge_features(sentence, sentence[neigh], sentence[vertex],
                                               self.callables_dict, self.idx_dict)
 
         return features
 
     def sentence_to_features(self, sentence):
         features = []
-        sentence[0] = 0
         for idx, word in sentence.items():
             if idx == 0:
                 continue
-            features += get_edge_features(word, sentence[word.parent], sentence, self.callables_dict, self.idx_dict)
+            features += get_edge_features(sentence, word, word[3], self.callables_dict, self.idx_dict)
 
         return features
 
@@ -61,28 +60,33 @@ class Perceptron:
         graphs = []
 
         for sentence in self.sentences:
-            graphs.append([sentence, self.sentence_to_features(sentence), self.sentence_to_graph(sentence)])
+            graphs.append({'sentence': sentence, 'sent_feat': self.sentence_to_features(sentence),
+                           'sent_graph': self.sentence_to_graph(sentence)})
 
         for i in range(self.num_iter):
-            for idx, sentence, features, graph in enumerate(graphs):
+            for idx, graph_dict in enumerate(graphs):
                 ground_graph = self.ground_graphs[idx]
-                weighted_graph = self.get_weighted_graph(graph)
+                weighted_graph = self.get_weighted_graph(graph_dict['sent_graph'])
                 w_graph = chu_liu.Digraph(weighted_graph)
                 graph_mst = w_graph.mst()
                 # Update part here
                 if not self.compare_trees(graph_mst, ground_graph):
-                    graph_features = self.graph_to_features(graph_mst, sentence)
-                    for feature in features:
+                    graph_features = self.graph_to_features(graph_mst, graph_dict['sentence'])
+                    for feature in graph_dict['sent_feat']:
                         self.w[feature] += 1
                     for feature in graph_features:
                         self.w[feature] -= 1
-
         print('fit finished')
+        print(self.w)
 
     @staticmethod
     def compare_trees(y_pred, y_true):
-        for key, value in y_pred:
+        flg = False
+        for key, value in y_pred.successors.items():
             for idx, item in enumerate(value):
                 if item != y_true[key][idx]:
                     return False
-        return True
+        for key, value in y_pred.successors.items():
+            if value:
+                flg = True
+        return flg
