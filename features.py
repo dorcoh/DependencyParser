@@ -120,7 +120,10 @@ def init_feature_functions(train_data, filter_dict):
     # init all functions
     callables_dict = {
         'parent_word_pos': ParentWordPos,
-        'parent_word': ParentWord
+        'parent_word': ParentWord,
+        'parent_pos': ParentPos,
+        'child_word_pos': ChildWordPos,
+        'child_word': ChildWord
     }
     for name, callable in callables_dict.items():
         callables_dict[name] = callable(name, train_data)
@@ -164,7 +167,10 @@ if __name__ == '__main__':
     data = Data('resources/test.labeled')
     filter_dict = {
         'parent_word_pos': 3,
-        'parent_word': 3
+        'parent_word': 3,
+        'parent_pos': 1,
+        'child_word_pos': 1,
+        'child_word': 1
     }
     callables_dict, idx_dict = init_feature_functions(data, filter_dict)
     m = compute_features_size(callables_dict)

@@ -10,7 +10,8 @@ class Perceptron:
         self.features_idx = []
         self.ground_graphs = ground_graphs
         self.callables_dict, self.idx_dict = init_feature_functions(sentences, filter_dict)
-        self.w = np.zeros(len(self.idx_dict.keys()))
+        #self.w = np.zeros(len(self.idx_dict.keys()))   # TODO: filtering occurrences causes missing indices in dict (OR we just delete those indices somewhere)
+        self.w = np.zeros(max(self.idx_dict.values())+1)
 
     def sentence_to_graph(self, sentence):
         graph = {0: {}}

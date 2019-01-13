@@ -4,8 +4,11 @@ from features import init_feature_functions
 
 bla = Data('resources/test.labeled')
 filter_dict = {
-    'parent_word_pos': 3,
-    'parent_word': 3
+    'parent_word_pos': 0,
+    'parent_word': 0,
+    'parent_pos': 0,
+    'child_word_pos': 0,
+    'child_word': 0
 }
 
 ground_graphs = {}
@@ -24,6 +27,3 @@ for sentence_idx, sentence in enumerate(bla):
 
 clf = Perceptron(bla, ground_graphs, filter_dict)
 clf.fit()
-
-for item in bla:
-    print(item)
