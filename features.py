@@ -64,7 +64,7 @@ class FeatureFunction(ABC):
     def get_enabled_feature(self, sentence, child, parent_id, idx_dict):
         """Returns enable feature id for (parent, child), if empty returns None"""
         child = copy.copy(child)
-        child[3] = parent_id  # TODO: validate that child won't change its value outside func
+        child[3] = parent_id
         key = self.extract_key(child, sentence)
         if not key in self.feature_dict:
             return None
@@ -74,7 +74,7 @@ class FeatureFunction(ABC):
 class ParentWordPos(FeatureFunction):
 
     def extract_key(self, tup, sentence):
-        parent_id = int(tup[3]) - 1
+        parent_id = int(tup[3])
         parent_word = sentence[parent_id][1]
         parent_pos = sentence[parent_id][2]
         key = (parent_word, parent_pos)
@@ -84,7 +84,7 @@ class ParentWordPos(FeatureFunction):
 class ParentWord(FeatureFunction):
 
     def extract_key(self, tup, sentence):
-        parent_id  = int(tup[3]) - 1
+        parent_id  = int(tup[3])
         parent_word = sentence[parent_id][1]
         key = (parent_word)
         return key
@@ -93,7 +93,7 @@ class ParentWord(FeatureFunction):
 class ParentPos(FeatureFunction):
 
     def extract_key(self, tup, sentence):
-        parent_id = int(tup[3]) - 1
+        parent_id = int(tup[3])
         parent_pos = sentence[parent_id][2]
         key = (parent_pos)
         return key
@@ -103,7 +103,7 @@ class ChildWordPos(FeatureFunction):
 
     def extract_key(self, tup, sentence):
         child_word = tup[1]
-        child_pos = tup[2] - 1
+        child_pos = tup[2]
         key = (child_word, child_pos)
         return key
 
