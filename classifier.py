@@ -36,7 +36,7 @@ class Perceptron:
         features = []
         for vertex, edges in graph.successors.items():
             for neigh in edges:
-                features += get_edge_features(sentence, sentence[neigh], sentence[vertex],
+                features += get_edge_features(sentence, sentence[neigh], sentence[vertex][0],
                                               self.callables_dict, self.idx_dict)
 
         return features
@@ -68,7 +68,20 @@ class Perceptron:
             for idx, graph_dict in enumerate(graphs):
                 ground_graph = self.ground_graphs[idx]
                 weighted_graph = self.get_weighted_graph(graph_dict['sent_graph'])
-                w_graph = chu_liu.Digraph(weighted_graph)
+                full_graph = {}
+
+                for parent_id, parent in graph_dict['sent_graph'].items():
+                    for child_id in parent.keys():
+                        if parent_id not in full_graph:
+                            full_graph[parent_id] = []
+                        if child_id == 0:
+                            continue
+                        full_graph[parent_id].append(child_id)
+
+                def get_score(h, m):
+                    return weighted_graph[h][m]
+
+                w_graph = chu_liu.Digraph(full_graph, get_score=get_score)
                 graph_mst = w_graph.mst()
                 # Update part here
                 if not self.compare_trees(graph_mst, ground_graph):
@@ -90,4 +103,5 @@ class Perceptron:
         for key, value in y_pred.successors.items():
             if value:
                 flg = True
+
         return flg

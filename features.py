@@ -95,7 +95,7 @@ class ParentPos(FeatureFunction):
     def extract_key(self, tup, sentence):
         parent_id = int(tup[3])
         parent_pos = sentence[parent_id][2]
-        key = (parent_pos)
+        key = parent_pos
         return key
 
 
