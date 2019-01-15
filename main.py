@@ -12,18 +12,26 @@ filter_dict = {
 }
 
 ground_graphs = {}
+gold_graph = {}
 
 for sentence_idx, sentence in enumerate(bla):
     for word_idx, word in sentence.items():
         if word_idx == 0:
             ground_graphs[sentence_idx] = {}
+            gold_graph[sentence_idx] = {}
+            gold_graph[sentence_idx][0] = []
+            ground_graphs[sentence_idx][0] = []
         if word[3] not in ground_graphs[sentence_idx].keys():
             ground_graphs[sentence_idx][word[3]] = []
+            gold_graph[sentence_idx][word[3]] = []
         if word[0] not in ground_graphs[sentence_idx].keys():
             ground_graphs[sentence_idx][word[0]] = []
+            gold_graph[sentence_idx][word[0]] = []
+        if word_idx != 0:
+            ground_graphs[sentence_idx][word[3]].append(word[0])
+            gold_graph[sentence_idx][word[3]].append(word[0])
+            ground_graphs[sentence_idx][0].append(word[0])
 
-        ground_graphs[sentence_idx][word[3]].append(word[0])
 
-
-clf = Perceptron(bla, ground_graphs, filter_dict)
+clf = Perceptron(bla, ground_graphs, filter_dict, gold_graph)
 clf.fit()

@@ -1,16 +1,18 @@
 from features import ParentWordPos, get_edge_features, init_feature_functions
 import chu_liu
 import numpy as np
+from collections import defaultdict
 
 
 class Perceptron:
-    def __init__(self, sentences, ground_graphs, filter_dict, num_iter=10):
+    def __init__(self, sentences, ground_graphs, filter_dict, gold_graph, num_iter=10):
         self.num_iter = num_iter
         self.sentences = sentences
         self.features_idx = []
         self.ground_graphs = ground_graphs
         self.callables_dict, self.idx_dict = init_feature_functions(sentences, filter_dict)
-        #self.w = np.zeros(len(self.idx_dict.keys()))   # TODO: filtering occurrences causes missing indices in dict (OR we just delete those indices somewhere)
+        self.gold_graph = gold_graph
+        # self.w = np.zeros(len(self.idx_dict.keys()))  # TODO: filtering occurrences causes missing indices in dict (OR we just delete those indices somewhere)
         self.w = np.zeros(max(self.idx_dict.values())+1)
 
     def sentence_to_graph(self, sentence):
@@ -53,7 +55,10 @@ class Perceptron:
     def get_weighted_graph(self, graph):
         weighted_graph = {}
         for vertex, neigh in graph.items():
-            weighted_graph[vertex] = {child: -np.sum(self.w[indices]) for child, indices in neigh.items()}
+            if vertex != 0:
+                weighted_graph[vertex] = {child: np.sum(self.w[indices]) for child, indices in neigh.items()}
+            else:
+                weighted_graph[vertex] = {child: 0 for child, indices in neigh.items()}
 
         return weighted_graph
 
@@ -68,6 +73,7 @@ class Perceptron:
             for idx, graph_dict in enumerate(graphs):
                 ground_graph = self.ground_graphs[idx]
                 weighted_graph = self.get_weighted_graph(graph_dict['sent_graph'])
+
                 full_graph = {}
 
                 for parent_id, parent in graph_dict['sent_graph'].items():
