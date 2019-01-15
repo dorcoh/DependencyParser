@@ -55,10 +55,7 @@ class Perceptron:
     def get_weighted_graph(self, graph):
         weighted_graph = {}
         for vertex, neigh in graph.items():
-            if vertex != 0:
-                weighted_graph[vertex] = {child: np.sum(self.w[indices]) for child, indices in neigh.items()}
-            else:
-                weighted_graph[vertex] = {child: 0 for child, indices in neigh.items()}
+            weighted_graph[vertex] = {child: np.sum(self.w[indices]) for child, indices in neigh.items()}
 
         return weighted_graph
 
@@ -103,9 +100,8 @@ class Perceptron:
     def compare_trees(y_pred, y_true):
         flg = False
         for key, value in y_pred.successors.items():
-            for idx, item in enumerate(value):
-                if item != y_true[key][idx]:
-                    return False
+            if value != y_true[key]:
+                return False
         for key, value in y_pred.successors.items():
             if value:
                 flg = True
