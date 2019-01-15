@@ -1,7 +1,8 @@
-from features import ParentWordPos, get_edge_features, init_feature_functions
+from features import ParentWordPos, get_edge_features, init_feature_functions, compute_features_size
 import chu_liu
 import numpy as np
 from collections import defaultdict
+from common import pickle_save, pickle_load
 
 
 class Perceptron:
@@ -11,6 +12,7 @@ class Perceptron:
         self.features_idx = []
         self.ground_graphs = ground_graphs
         self.callables_dict, self.idx_dict = init_feature_functions(sentences, filter_dict)
+        self.m = compute_features_size(self.callables_dict)
         self.gold_graph = gold_graph
         # self.w = np.zeros(len(self.idx_dict.keys()))  # TODO: filtering occurrences causes missing indices in dict (OR we just delete those indices somewhere)
         self.w = np.zeros(max(self.idx_dict.values())+1)
@@ -93,6 +95,16 @@ class Perceptron:
                         self.w[feature] += 1
                     for feature in graph_features:
                         self.w[feature] -= 1
+
+            iter = i + 1
+            print('finished iter ' + str(iter))
+            print('positive weights ' + str(np.sum(self.w > 0)))
+            print('negative weights ' + str(np.sum(self.w < 0)))
+            print('zero weights ' + str(np.sum(self.w == 0)))
+
+            if iter in [20, 50, 80, 100]:
+                pickle_save(self.w, 'w%d.pickle' % iter)
+
         print('fit finished')
         print(self.w)
 
