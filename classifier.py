@@ -2,10 +2,11 @@ from features import ParentWordPos, get_edge_features, init_feature_functions, c
 import chu_liu
 import numpy as np
 from collections import defaultdict
-from common import pickle_save, pickle_load
-
+from common import pickle_save, pickle_load, timeit
 
 class Perceptron:
+
+    @timeit
     def __init__(self, sentences, ground_graphs, filter_dict, gold_graph, num_iter=10):
         self.num_iter = num_iter
         self.sentences = sentences
@@ -61,6 +62,7 @@ class Perceptron:
 
         return weighted_graph
 
+    @timeit
     def fit(self):
         graphs = []
 
