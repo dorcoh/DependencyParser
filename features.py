@@ -203,22 +203,29 @@ class ParentChildPos(FeatureFunction):
         return key
 
 
+feature_functions = {
+    # unigram
+    'parent_word_pos': ParentWordPos,
+    'parent_word': ParentWord,
+    'parent_pos': ParentPos,
+    'child_word_pos': ChildWordPos,
+    'child_word': ChildWord,
+    'child_pos': ChildPos,
+    # bigram
+    'parent_child_word_pos': ParentChildWordPos,
+    'parent_pos_child_word_pos': ParentPosChildWordPos,
+    'parent_word_child_word_pos': ParentWordChildWordPos,
+    'parent_word_pos_child_pos': ParentWordPosChildPos,
+    'parent_word_pos_child_word': ParentWordPosChildWord,
+    'parent_child_word': ParentChildWord,
+    'parent_child_pos': ParentChildPos
+}
+
+
 def init_feature_functions(train_data, filter_dict):
-    # init all functions
-    callables_dict = {
-        'parent_word_pos': ParentWordPos,
-        'parent_word': ParentWord,
-        'parent_pos': ParentPos,
-        'child_word_pos': ChildWordPos,
-        'child_word': ChildWord,
-        'child_pos': ChildPos,
-        # bigram
-        'parent_pos_child_word_pos': ParentPosChildWordPos, # 8
-        'parent_word_pos_child_pos': ParentWordPosChildPos, # 10
-        'parent_pos_child_pos': ParentChildPos
-    }
-    for name, callable in callables_dict.items():
-        callables_dict[name] = callable(name, train_data)
+    callables_dict = {}
+    for name in filter_dict.keys():
+        callables_dict[name] = feature_functions[name](name, train_data)
         callables_dict[name].filter_features(filter_dict[name])
 
     idx_dic = {}

@@ -7,15 +7,20 @@ from common import pickle_save, pickle_load, timeit
 class Perceptron:
 
     @timeit
-    def __init__(self, sentences, ground_graphs, filter_dict, gold_graph, num_iter=10):
-        self.num_iter = num_iter
+    def __init__(self, sentences, filter_dict):
+        self.num_iter = 1
         self.sentences = sentences
         self.features_idx = []
-        self.ground_graphs = ground_graphs
+        self.ground_graphs = {}
+        self.get_ground_graphs(sentences)
         self.callables_dict, self.idx_dict = init_feature_functions(sentences, filter_dict)
         self.m = compute_features_size(self.callables_dict)
-        self.gold_graph = gold_graph
         self.w = np.zeros(self.m)
+        # in-training measures
+        self.true = 0
+        self.false = 0
+        self.total = 0
+        self.accuracy = 0
 
     def sentence_to_graph(self, sentence):
         graph = {0: {}}
@@ -61,8 +66,22 @@ class Perceptron:
 
         return weighted_graph
 
+    def get_ground_graphs(self, data):
+        for sentence_idx, sentence in enumerate(data):
+            for word_idx, word in sentence.items():
+                if word_idx == 0:
+                    self.ground_graphs[sentence_idx] = {}
+                    self.ground_graphs[sentence_idx][0] = []
+                if word[3] not in self.ground_graphs[sentence_idx].keys():
+                    self.ground_graphs[sentence_idx][word[3]] = []
+                if word[0] not in self.ground_graphs[sentence_idx].keys():
+                    self.ground_graphs[sentence_idx][word[0]] = []
+                if word_idx != 0:
+                    self.ground_graphs[sentence_idx][word[3]].append(word[0])
+
     @timeit
-    def fit(self):
+    def fit(self, num_iter=10):
+        self.num_iter = num_iter
         graphs = []
 
         for sentence in self.sentences:
@@ -96,12 +115,10 @@ class Perceptron:
                         self.w[feature] += 1
                     for feature in graph_features:
                         self.w[feature] -= 1
+                self.update_accuracy(graph_mst, ground_graph)
 
             iter = i + 1
-            print('finished iter ' + str(iter))
-            print('positive weights ' + str(np.sum(self.w > 0)))
-            print('negative weights ' + str(np.sum(self.w < 0)))
-            print('zero weights ' + str(np.sum(self.w == 0)))
+            self.print_stats(iter)
 
             if iter in [20, 50, 80, 100]:
                 pickle_save(self.w, 'w%d.pickle' % iter)
@@ -120,3 +137,22 @@ class Perceptron:
                 flg = True
 
         return flg
+
+    def update_accuracy(self, y_pred, y_true):
+        y_pred = y_pred.successors
+        for key, value in y_true.items():
+            if value:
+                for item in value:
+                    if item in y_pred[key]:
+                        self.true += 1
+                    else:
+                        self.false += 1
+                    self.total += 1
+
+        self.accuracy = self.true/self.total
+
+    def print_stats(self, iter):
+        print("finished iter " + str(iter))
+        print("Current accuracy: %f" % self.accuracy)
+        w_status = (np.sum(self.w > 0), np.sum(self.w < 0), np.sum(self.w == 0))
+        print("Weights status: Pos=%d, Neg=%d, Zero=%d" % w_status)
