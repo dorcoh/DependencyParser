@@ -1,5 +1,6 @@
 from abc import ABC, abstractmethod
 from scipy.sparse import csr_matrix
+from common import optional
 import copy
 
 
@@ -244,42 +245,34 @@ class WordDistance(FeatureFunction):
 # optional (could be None)
 class PreChildPos(FeatureFunction):
 
+    @optional
     def extract_key(self, c):
-        try:
-            key = (16, c['parent_pos'], c['child_pos'], c['p_child_pos'])
-            return key
-        except:
-            return None
+        key = (16, c['parent_pos'], c['child_pos'], c['p_child_pos'])
+        return key
 
 
 class NextChildPos(FeatureFunction):
 
+    @optional
     def extract_key(self, c):
-        try:
-            key = (17, c['parent_pos'], c['child_pos'], c['n_child_pos'])
-            return key
-        except:
-            return None
+        key = (17, c['parent_pos'], c['child_pos'], c['n_child_pos'])
+        return key
 
 
 class NextParentPos(FeatureFunction):
 
+    @optional
     def extract_key(self, c):
-        try:
-            key = (18, c['parent_pos'], c['child_pos'], c['n_parent_pos'])
-            return key
-        except:
-            return None
+        key = (18, c['parent_pos'], c['child_pos'], c['n_parent_pos'])
+        return key
 
 
 class PreParentPos(FeatureFunction):
 
+    @optional
     def extract_key(self, c):
-        try:
-            key = (19, c['parent_pos'], c['child_pos'], c['p_parent_pos'])
-            return key
-        except:
-            return None
+        key = (19, c['parent_pos'], c['child_pos'], c['p_parent_pos'])
+        return key
 
 
 feature_functions = {
