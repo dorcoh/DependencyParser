@@ -56,10 +56,10 @@ class FeatureFunction(ABC):
             comp['p_child_pos'] = sentence[child_id-1][2]
 
         if parent_id < len(sentence) - 1:
-            comp['p_parent_pos'] = sentence[parent_id+1][3]
+            comp['n_parent_pos'] = sentence[parent_id+1][3]
 
         if parent_id > 1:
-            comp['n_parent_pos'] = sentence[parent_id-1][3]
+            comp['p_parent_pos'] = sentence[parent_id-1][3]
 
         return comp
 
@@ -337,6 +337,7 @@ def compute_features_size(callables_dict):
 
 
 def get_edge_features(sentence, child, parent_id, callables_dict, idx_dict):
+    #  TODO: child could also be ROOT here, check if ok
     feature_indices = []
     for name, feature_function in callables_dict.items():
         feature_id = feature_function.get_enabled_feature(sentence, child, parent_id, idx_dict)
