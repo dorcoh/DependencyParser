@@ -32,7 +32,10 @@ filter_dict_model = {
     'parent_word_pos_child_pos': 0,
     'parent_word_pos_child_word': 0,
     'parent_child_word': 0,
-    'parent_child_pos': 0
+    'parent_child_pos': 0,
+    # extra
+    'parent_child_pos_distance': 0,
+    'parent_child_word_distance': 0
 }
 
 clf = Perceptron(data, filter_dict_model)

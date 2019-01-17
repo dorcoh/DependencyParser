@@ -81,6 +81,10 @@ class Perceptron:
 
     @timeit
     def fit(self, num_iter=10):
+        self.true = 0
+        self.false = 0
+        self.total = 0
+        self.accuracy = 0
         self.num_iter = num_iter
         graphs = []
 
