@@ -32,7 +32,8 @@ class FeatureFunction(ABC):
 
     @abstractmethod
     def extract_key(self, tup, sentence):
-        """returns unique feature key as a tuple"""
+        """returns unique feature key as a tuple
+        key has a form (feature_id, attr1, attr2..)"""
         pass
 
     def __call__(self, **kwargs):
@@ -77,7 +78,7 @@ class ParentWordPos(FeatureFunction):
         parent_id = int(tup[3])
         parent_word = sentence[parent_id][1]
         parent_pos = sentence[parent_id][2]
-        key = (parent_word, parent_pos)
+        key = (1, parent_word, parent_pos)
         return key
 
 
@@ -86,7 +87,7 @@ class ParentWord(FeatureFunction):
     def extract_key(self, tup, sentence):
         parent_id = int(tup[3])
         parent_word = sentence[parent_id][1]
-        key = (parent_word)
+        key = (2, parent_word)
         return key
 
 
@@ -95,7 +96,7 @@ class ParentPos(FeatureFunction):
     def extract_key(self, tup, sentence):
         parent_id = int(tup[3])
         parent_pos = sentence[parent_id][2]
-        key = parent_pos
+        key = (3, parent_pos)
         return key
 
 
@@ -104,7 +105,7 @@ class ChildWordPos(FeatureFunction):
     def extract_key(self, tup, sentence):
         child_word = tup[1]
         child_pos = tup[2]
-        key = (child_word, child_pos)
+        key = (4, child_word, child_pos)
         return key
 
 
@@ -112,99 +113,94 @@ class ChildWord(FeatureFunction):
 
     def extract_key(self, tup, sentence):
         child_word = tup[1]
-        key = (child_word)
+        key = (5, child_word)
         return key
 
-
-# new
 
 class ChildPos(FeatureFunction):
 
     def extract_key(self, tup, sentence):
         child_pos = tup[2]
-        key = (child_pos)
+        key = (6, child_pos)
         return key
-
 
 # bigram
 
+
 class ParentChildWordPos(FeatureFunction):
-# 7
+
     def extract_key(self, tup, sentence):
         parent_id = int(tup[3])
         parent_word = sentence[parent_id][1]
         parent_pos = sentence[parent_id][2]
         child_word = tup[1]
         child_pos = tup[2]
-        key = (parent_word, parent_pos, child_word, child_pos)
+        key = (7, parent_word, parent_pos, child_word, child_pos)
         return key
 
 
 class ParentPosChildWordPos(FeatureFunction):
-# 8
+
     def extract_key(self, tup, sentence):
         parent_id = int(tup[3])
         parent_pos = sentence[parent_id][2]
         child_word = tup[1]
         child_pos = tup[2]
-        key = (parent_pos, child_word, child_pos)
+        key = (8, parent_pos, child_word, child_pos)
         return key
 
 
 class ParentWordChildWordPos(FeatureFunction):
-# 9
+
     def extract_key(self, tup, sentence):
         parent_id = int(tup[3])
         parent_word = sentence[parent_id][1]
         child_word = tup[1]
         child_pos = tup[2]
-        key = (parent_word, child_word, child_pos)
+        key = (9, parent_word, child_word, child_pos)
         return key
 
 
 class ParentWordPosChildPos(FeatureFunction):
-# 10
+
     def extract_key(self, tup, sentence):
         parent_id = int(tup[3])
         parent_word = sentence[parent_id][1]
         parent_pos = sentence[parent_id][2]
         child_pos = tup[2]
-        key = (parent_word, parent_pos, child_pos)
+        key = (10, parent_word, parent_pos, child_pos)
         return key
 
 
 class ParentWordPosChildWord(FeatureFunction):
-# 11
+
     def extract_key(self, tup, sentence):
         parent_id = int(tup[3])
         parent_word = sentence[parent_id][1]
         parent_pos = sentence[parent_id][2]
         child_word = tup[1]
-        key = (parent_word, parent_pos, child_word)
+        key = (11, parent_word, parent_pos, child_word)
         return key
 
 
 class ParentChildWord(FeatureFunction):
-# 12
+
     def extract_key(self, tup, sentence):
         parent_id = int(tup[3])
         parent_word = sentence[parent_id][1]
         child_word = tup[1]
-        key = (parent_word, child_word)
+        key = (12, parent_word, child_word)
         return key
 
 
 class ParentChildPos(FeatureFunction):
-# 13
+
     def extract_key(self, tup, sentence):
         parent_id = int(tup[3])
-        parent_word = sentence[parent_id][1]
         parent_pos = sentence[parent_id][2]
-        child_word = tup[1]
         child_pos = tup[2]
-        key = (parent_word, parent_pos, child_word, child_pos)
+        key = (13, parent_pos, child_pos)
         return key
-
 
 
 def init_feature_functions(train_data, filter_dict):
@@ -220,8 +216,6 @@ def init_feature_functions(train_data, filter_dict):
         'parent_pos_child_word_pos': ParentPosChildWordPos, # 8
         'parent_word_pos_child_pos': ParentWordPosChildPos, # 10
         'parent_pos_child_pos': ParentChildPos
-
-
     }
     for name, callable in callables_dict.items():
         callables_dict[name] = callable(name, train_data)

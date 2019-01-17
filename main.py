@@ -2,7 +2,8 @@ from decoder import Data
 from classifier import Perceptron
 from features import init_feature_functions
 
-bla = Data('resources/train.labeled')
+bla = Data('resources/dev_10.labeled')
+
 filter_dict = {
     'parent_word_pos': 0,
     'parent_word': 0,
@@ -38,5 +39,5 @@ for sentence_idx, sentence in enumerate(bla):
             ground_graphs[sentence_idx][0].append(word[0])
 
 
-clf = Perceptron(bla, ground_graphs, filter_dict, gold_graph, num_iter=101)
+clf = Perceptron(bla, ground_graphs, filter_dict, gold_graph, num_iter=20)
 clf.fit()

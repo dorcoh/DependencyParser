@@ -15,8 +15,7 @@ class Perceptron:
         self.callables_dict, self.idx_dict = init_feature_functions(sentences, filter_dict)
         self.m = compute_features_size(self.callables_dict)
         self.gold_graph = gold_graph
-        # self.w = np.zeros(len(self.idx_dict.keys()))  # TODO: filtering occurrences causes missing indices in dict (OR we just delete those indices somewhere)
-        self.w = np.zeros(max(self.idx_dict.values())+1)
+        self.w = np.zeros(self.m)
 
     def sentence_to_graph(self, sentence):
         graph = {0: {}}
