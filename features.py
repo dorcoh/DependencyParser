@@ -2,6 +2,7 @@ from abc import ABC, abstractmethod
 from scipy.sparse import csr_matrix
 import copy
 
+
 class FeatureFunction(ABC):
     def __init__(self, name, data):
         self.feature_dict = {}
@@ -202,6 +203,34 @@ class ParentChildPos(FeatureFunction):
         key = (13, parent_pos, child_pos)
         return key
 
+# extra
+
+
+class PosDistance(FeatureFunction):
+
+    def extract_key(self, tup, sentence):
+        child_id = int(tup[0])
+        parent_id = int(tup[3])
+        parent_pos = sentence[parent_id][2]
+        child_pos = tup[2]
+        distance = abs(parent_id - child_id)-1
+        key = (14, parent_pos, child_pos, distance)
+        return key
+
+
+class WordDistance(FeatureFunction):
+
+    def extract_key(self, tup, sentence):
+        child_id = int(tup[0])
+        parent_id = int(tup[3])
+        distance = abs(parent_id - child_id)-1
+        parent_word = sentence[parent_id][1]
+        child_word = tup[1]
+        key = (15, parent_word, child_word, distance)
+        return key
+
+
+
 
 feature_functions = {
     # unigram
@@ -218,7 +247,10 @@ feature_functions = {
     'parent_word_pos_child_pos': ParentWordPosChildPos,
     'parent_word_pos_child_word': ParentWordPosChildWord,
     'parent_child_word': ParentChildWord,
-    'parent_child_pos': ParentChildPos
+    'parent_child_pos': ParentChildPos,
+    # extra
+    'parent_child_pos_distance': PosDistance,
+    'parent_child_word_distance': WordDistance
 }
 
 
