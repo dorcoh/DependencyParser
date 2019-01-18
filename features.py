@@ -206,7 +206,6 @@ class ParentChildPos(FeatureFunction):
         return key
 
 
-
 def init_feature_functions(train_data, filter_dict):
     # init all functions
     callables_dict = {
