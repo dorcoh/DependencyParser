@@ -2,6 +2,7 @@ import csv
 import pickle
 import time
 
+
 def get_text_file(file_path):
     rows = []
 

@@ -5,8 +5,7 @@ from common import pickle_save, pickle_load, timeit
 
 
 class Perceptron:
-
-    def __init__(self, sentences, filter_dict, num_iter=1):
+    def __init__(self, sentences, filter_dict, test_data, num_iter=1):
         self.num_iter = num_iter
         self.sentences = sentences
         self.features_idx = []
@@ -21,6 +20,7 @@ class Perceptron:
         self.total = 0
         self.accuracy = 0
         self.iter_num = 0
+        self.test_data = test_data
 
     def sentence_to_graph(self, sentence):
         graph = {0: {}}
@@ -79,7 +79,23 @@ class Perceptron:
                 if word_idx != 0:
                     self.ground_graphs[sentence_idx][word[3]].append(word[0])
 
-    @timeit
+    @staticmethod
+    def ground_graph_test(data):
+        ground_graphs = {}
+        for sentence_idx, sentence in enumerate(data):
+            for word_idx, word in sentence.items():
+                if word_idx == 0:
+                    ground_graphs[sentence_idx] = {}
+                    ground_graphs[sentence_idx][0] = []
+                if word[3] not in ground_graphs[sentence_idx].keys():
+                    ground_graphs[sentence_idx][word[3]] = []
+                if word[0] not in ground_graphs[sentence_idx].keys():
+                    ground_graphs[sentence_idx][word[0]] = []
+                if word_idx != 0:
+                    ground_graphs[sentence_idx][word[3]].append(word[0])
+
+        return ground_graphs
+
     def fit(self, num_iter=10):
         self.num_iter = num_iter
 
@@ -164,6 +180,10 @@ class Perceptron:
         print("Current accuracy: %f" % self.accuracy)
         w_status = (np.sum(self.w > 0), np.sum(self.w < 0), np.sum(self.w == 0))
         print("Weights status: Pos=%d, Neg=%d, Zero=%d" % w_status)
+
+        y_true = self.ground_graph_test(self.test_data)
+        y_pred = self.predict(self.test_data)
+        print('Accuracy in iter ', iter_num, ':', self.get_accuracy(y_pred, y_true))
 
     def predict(self, data):
         graphs = []
