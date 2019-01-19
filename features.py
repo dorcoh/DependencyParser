@@ -1,17 +1,76 @@
 from abc import ABC, abstractmethod
 from scipy.sparse import csr_matrix
+from common import optional
 import copy
+
 
 class FeatureFunction(ABC):
     def __init__(self, name, data):
         self.feature_dict = {}
         self.name = name
-        self.data = self.preprocess(data)
+        self.preprocess(data)
+
+    def parse(self, tup, sentence):
+        """parse current sample feature components into shared dict"""
+        parent_id = int(tup[3])
+        child_id = int(tup[0])
+        parent_word = sentence[parent_id][1]
+        parent_pos = sentence[parent_id][2]
+        child_word = tup[1]
+        child_pos = tup[2]
+        distance = parent_id - child_id - 1  # todo: bidirectional
+        parent_before = 1 if parent_id > child_id else 0
+
+        verb_between = 0
+        noun_between = 0
+
+        if parent_before:
+            range_ = range(child_id+1, parent_id)
+        else:
+            range_ = range(parent_id+1, child_id)
+
+        for id in range_:
+            curr_pos = sentence[id][2]
+            if curr_pos in ['VB', 'VBN', 'VBD', 'VBG']:
+                verb_between = 1
+            if curr_pos in ['NN', 'NNP', 'NNS', 'NNPS']:
+                noun_between = 1
+
+        comp = {
+            'parent_id': parent_id,
+            'child_id': child_id,
+            'parent_word': parent_word,
+            'parent_pos': parent_pos,
+            'child_word': child_word,
+            'child_pos': child_pos,
+            'distance': distance,
+            'parent_before': parent_before,
+            'verb_between': verb_between,
+            'noun_between': noun_between
+        }
+
+        # optional
+        if child_id < len(sentence) - 1:
+            comp['n_child_pos'] = sentence[child_id+1][2]
+
+        if child_id > 1:
+            comp['p_child_pos'] = sentence[child_id-1][2]
+
+        if parent_id < len(sentence) - 1:
+            comp['n_parent_pos'] = sentence[parent_id+1][3]
+
+        if parent_id > 1:
+            comp['p_parent_pos'] = sentence[parent_id-1][3]
+
+        return comp
 
     def preprocess(self, data):
         for sentence in data:
             for i in range(1, len(sentence.keys())):
-                key = self.extract_key(sentence[i], sentence)
+                comp = self.parse(sentence[i], sentence)
+                key = self.extract_key(comp)
+                if key is None:
+                    continue
                 if key in self.feature_dict:
                     self.feature_dict[key] += 1
                 else:
@@ -31,8 +90,9 @@ class FeatureFunction(ABC):
         return len(self.feature_dict.keys())
 
     @abstractmethod
-    def extract_key(self, tup, sentence):
-        """returns unique feature key as a tuple"""
+    def extract_key(self, comp):
+        """returns unique feature key as a tuple
+        key has a form (feature_id, attr1, attr2..)"""
         pass
 
     def __call__(self, **kwargs):
@@ -42,7 +102,8 @@ class FeatureFunction(ABC):
         idx_dict = kwargs['idx_dict']
         temp_dict = {}
         for tup in sentence:
-            key = self.extract_key(tup, sentence)
+            comp = self.parse(tup, sentence)
+            key = self.extract_key(comp)
             # filter out features
             if key not in self.feature_dict:
                 return [], [], []
@@ -65,7 +126,8 @@ class FeatureFunction(ABC):
         """Returns enable feature id for (parent, child), if empty returns None"""
         child = copy.copy(child)
         child[3] = parent_id
-        key = self.extract_key(child, sentence)
+        comp = self.parse(child, sentence)
+        key = self.extract_key(comp)
         if not key in self.feature_dict:
             return None
         return idx_dict[key]
@@ -73,157 +135,176 @@ class FeatureFunction(ABC):
 
 class ParentWordPos(FeatureFunction):
 
-    def extract_key(self, tup, sentence):
-        parent_id = int(tup[3])
-        parent_word = sentence[parent_id][1]
-        parent_pos = sentence[parent_id][2]
-        key = (parent_word, parent_pos)
+    def extract_key(self, c):
+        key = (1, c['parent_word'], c['parent_pos'])
         return key
 
 
 class ParentWord(FeatureFunction):
 
-    def extract_key(self, tup, sentence):
-        parent_id = int(tup[3])
-        parent_word = sentence[parent_id][1]
-        key = (parent_word)
+    def extract_key(self, c):
+        key = (2, c['parent_word'])
         return key
 
 
 class ParentPos(FeatureFunction):
 
-    def extract_key(self, tup, sentence):
-        parent_id = int(tup[3])
-        parent_pos = sentence[parent_id][2]
-        key = parent_pos
+    def extract_key(self, c):
+        key = (3, c['parent_pos'])
         return key
 
 
 class ChildWordPos(FeatureFunction):
 
-    def extract_key(self, tup, sentence):
-        child_word = tup[1]
-        child_pos = tup[2]
-        key = (child_word, child_pos)
+    def extract_key(self, c):
+        key = (4, c['child_word'], c['child_pos'])
         return key
 
 
 class ChildWord(FeatureFunction):
 
-    def extract_key(self, tup, sentence):
-        child_word = tup[1]
-        key = (child_word)
+    def extract_key(self, c):
+        key = (5, c['child_word'])
         return key
 
-
-# new
 
 class ChildPos(FeatureFunction):
 
-    def extract_key(self, tup, sentence):
-        child_pos = tup[2]
-        key = (child_pos)
+    def extract_key(self, c):
+        key = (6, c['child_pos'])
         return key
-
 
 # bigram
 
+
 class ParentChildWordPos(FeatureFunction):
-# 7
-    def extract_key(self, tup, sentence):
-        parent_id = int(tup[3])
-        parent_word = sentence[parent_id][1]
-        parent_pos = sentence[parent_id][2]
-        child_word = tup[1]
-        child_pos = tup[2]
-        key = (parent_word, parent_pos, child_word, child_pos)
+
+    def extract_key(self, c):
+        key = (7, c['parent_word'], c['parent_pos'], c['child_word'], c['child_pos'])
         return key
 
 
 class ParentPosChildWordPos(FeatureFunction):
-# 8
-    def extract_key(self, tup, sentence):
-        parent_id = int(tup[3])
-        parent_pos = sentence[parent_id][2]
-        child_word = tup[1]
-        child_pos = tup[2]
-        key = (parent_pos, child_word, child_pos)
+
+    def extract_key(self, c):
+        key = (8, c['parent_pos'], c['child_word'], c['child_pos'])
         return key
 
 
 class ParentWordChildWordPos(FeatureFunction):
-# 9
-    def extract_key(self, tup, sentence):
-        parent_id = int(tup[3])
-        parent_word = sentence[parent_id][1]
-        child_word = tup[1]
-        child_pos = tup[2]
-        key = (parent_word, child_word, child_pos)
+
+    def extract_key(self, c):
+        key = (9, c['parent_word'], c['child_word'], c['child_pos'])
         return key
 
 
 class ParentWordPosChildPos(FeatureFunction):
-# 10
-    def extract_key(self, tup, sentence):
-        parent_id = int(tup[3])
-        parent_word = sentence[parent_id][1]
-        parent_pos = sentence[parent_id][2]
-        child_pos = tup[2]
-        key = (parent_word, parent_pos, child_pos)
+
+    def extract_key(self, c):
+        key = (10, c['parent_word'], c['parent_pos'], c['child_pos'])
         return key
 
 
 class ParentWordPosChildWord(FeatureFunction):
-# 11
-    def extract_key(self, tup, sentence):
-        parent_id = int(tup[3])
-        parent_word = sentence[parent_id][1]
-        parent_pos = sentence[parent_id][2]
-        child_word = tup[1]
-        key = (parent_word, parent_pos, child_word)
+
+    def extract_key(self, c):
+        key = (11, c['parent_word'], c['parent_pos'], c['child_word'])
         return key
 
 
 class ParentChildWord(FeatureFunction):
-# 12
-    def extract_key(self, tup, sentence):
-        parent_id = int(tup[3])
-        parent_word = sentence[parent_id][1]
-        child_word = tup[1]
-        key = (parent_word, child_word)
+
+    def extract_key(self, c):
+        key = (12, c['parent_word'], c['child_word'])
         return key
 
 
 class ParentChildPos(FeatureFunction):
-# 13
-    def extract_key(self, tup, sentence):
-        parent_id = int(tup[3])
-        parent_word = sentence[parent_id][1]
-        parent_pos = sentence[parent_id][2]
-        child_word = tup[1]
-        child_pos = tup[2]
-        key = (parent_word, parent_pos, child_word, child_pos)
+
+    def extract_key(self, c):
+        key = (13, c['parent_pos'], c['child_pos'])
+        return key
+
+# extra
+
+
+class PosDistance(FeatureFunction):
+
+    def extract_key(self, c):
+        key = (14, c['parent_pos'], c['child_pos'], c['distance'])
         return key
 
 
+class WordDistance(FeatureFunction):
+
+    def extract_key(self, c):
+        key = (15, c['parent_word'], c['child_word'], c['distance'])
+        return key
+
+
+# optional (could be None)
+class PreChildPos(FeatureFunction):
+
+    @optional
+    def extract_key(self, c):
+        key = (16, c['parent_pos'], c['child_pos'], c['p_child_pos'])
+        return key
+
+
+class NextChildPos(FeatureFunction):
+
+    @optional
+    def extract_key(self, c):
+        key = (17, c['parent_pos'], c['child_pos'], c['n_child_pos'])
+        return key
+
+
+class NextParentPos(FeatureFunction):
+
+    @optional
+    def extract_key(self, c):
+        key = (18, c['parent_pos'], c['child_pos'], c['n_parent_pos'])
+        return key
+
+
+class PreParentPos(FeatureFunction):
+
+    @optional
+    def extract_key(self, c):
+        key = (19, c['parent_pos'], c['child_pos'], c['p_parent_pos'])
+        return key
+
+
+feature_functions = {
+    # unigram
+    'parent_word_pos': ParentWordPos,
+    'parent_word': ParentWord,
+    'parent_pos': ParentPos,
+    'child_word_pos': ChildWordPos,
+    'child_word': ChildWord,
+    'child_pos': ChildPos,
+    # bigram
+    'parent_child_word_pos': ParentChildWordPos,
+    'parent_pos_child_word_pos': ParentPosChildWordPos,
+    'parent_word_child_word_pos': ParentWordChildWordPos,
+    'parent_word_pos_child_pos': ParentWordPosChildPos,
+    'parent_word_pos_child_word': ParentWordPosChildWord,
+    'parent_child_word': ParentChildWord,
+    'parent_child_pos': ParentChildPos,
+    # extra
+    'parent_child_pos_distance': PosDistance,
+    'parent_child_word_distance': WordDistance,
+    'pre_child_pos': PreChildPos,
+    'next_child_pos': NextChildPos,
+    'next_parent_pos': NextParentPos,
+    'pre_parent_pos': PreParentPos
+}
+
+
 def init_feature_functions(train_data, filter_dict):
-    # init all functions
-    callables_dict = {
-        'parent_word_pos': ParentWordPos,
-        'parent_word': ParentWord,
-        'parent_pos': ParentPos,
-        # 'child_word_pos': ChildWordPos,
-        # 'child_word': ChildWord,
-        # 'child_pos': ChildPos,
-        # # bigram
-        # 'parent_pos_child_word_pos': ParentPosChildWordPos, # 8
-        # 'parent_word_pos_child_pos': ParentWordPosChildPos, # 10
-        # 'parent_pos_child_pos': ParentChildPos
-
-
-    }
-    for name, callable in callables_dict.items():
-        callables_dict[name] = callable(name, train_data)
+    callables_dict = {}
+    for name in filter_dict.keys():
+        callables_dict[name] = feature_functions[name](name, train_data)
         callables_dict[name].filter_features(filter_dict[name])
 
     idx_dic = {}
@@ -249,6 +330,7 @@ def compute_features_size(callables_dict):
 
 
 def get_edge_features(sentence, child, parent_id, callables_dict, idx_dict):
+    #  TODO: child could also be ROOT here, check if ok
     feature_indices = []
     for name, feature_function in callables_dict.items():
         feature_id = feature_function.get_enabled_feature(sentence, child, parent_id, idx_dict)
