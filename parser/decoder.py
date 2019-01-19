@@ -1,4 +1,4 @@
-from common import get_text_file
+from parser.common import get_text_file
 
 
 class Dataset(object):

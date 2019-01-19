@@ -1,7 +1,7 @@
-from features import get_features, init_feature_functions, compute_features_size
-import chu_liu
+from parser.features import get_features, init_feature_functions, compute_features_size
+from parser import chu_liu
 import numpy as np
-from common import pickle_save, timeit
+from parser.common import pickle_save, timeit
 
 EARLY_STOPPING_ITERATIONS = 20
 

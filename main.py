@@ -1,7 +1,8 @@
 import sys
-from decoder import Data
-from classifier import Perceptron
-from features_params import filter_dict, filter_dict_model
+from parser.decoder import Data
+from parser.classifier import Perceptron
+from parser.features_params import filter_dict, filter_dict_model
+
 
 def main(argv):
     # read params

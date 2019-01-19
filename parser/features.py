@@ -1,5 +1,5 @@
 from abc import ABC, abstractmethod
-from common import optional
+from parser.common import optional
 import copy
 
 
