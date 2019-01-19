@@ -1,5 +1,5 @@
 from abc import ABC, abstractmethod
-from common import optional, baseline
+from common import optional
 import copy
 
 
