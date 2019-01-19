@@ -8,8 +8,8 @@ def main(argv):
     # read params
     if argv:
         num_iter = int(argv[0])
-        is_baseline = bool(argv[1])
-        early_stopping = bool(argv[2])
+        is_baseline = bool(int(argv[1]))
+        early_stopping = bool(int(argv[2]))
     else:
         print("Usage: python main.py num_iter is_baseline(1/0) early_stopping(1/0)")
         return
@@ -19,8 +19,8 @@ def main(argv):
     else:
         feature_dict = filter_dict_model
 
-    train_data = Data('resources/dev_20.labeled')
-    test_data = Data('resources/dev_10.labeled')
+    train_data = Data('resources/train.labeled')
+    test_data = Data('resources/test.labeled')
 
     clf = Perceptron(train_data=train_data, test_data=test_data, filter_dict=feature_dict, baseline=is_baseline,
                      early_stopping=early_stopping)

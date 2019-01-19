@@ -249,7 +249,7 @@ class PreChildPos(FeatureFunction):
 
     @optional
     def extract_key(self, c):
-        key = (14, c['parent_pos'], c['child_pos'], c['p_child_pos'])
+        key = (14, c['parent_pos'], c['child_pos'], c['p_child_pos'], c['distance_pc'])
         return key
 
 
@@ -257,7 +257,7 @@ class NextChildPos(FeatureFunction):
 
     @optional
     def extract_key(self, c):
-        key = (15, c['parent_pos'], c['child_pos'], c['n_child_pos'])
+        key = (15, c['parent_pos'], c['child_pos'], c['n_child_pos'], c['distance_pc'])
         return key
 
 
@@ -265,7 +265,7 @@ class NextParentPos(FeatureFunction):
 
     @optional
     def extract_key(self, c):
-        key = (16, c['parent_pos'], c['child_pos'], c['n_parent_pos'])
+        key = (16, c['parent_pos'], c['child_pos'], c['n_parent_pos'], c['distance_pc'])
         return key
 
 
@@ -273,7 +273,7 @@ class PreParentPos(FeatureFunction):
 
     @optional
     def extract_key(self, c):
-        key = (17, c['parent_pos'], c['child_pos'], c['p_parent_pos'])
+        key = (17, c['parent_pos'], c['child_pos'], c['p_parent_pos'], c['distance_pc'])
         return key
 
 
