@@ -50,14 +50,3 @@ def timeit(method):
         return result
 
     return timed
-
-
-def optional(method):
-    def wrapped(*args, **kw):
-        try:
-            result = method(*args, **kw)
-            return result
-        except:
-            return None
-
-    return wrapped

@@ -24,7 +24,7 @@ def main(argv):
 
     clf = Perceptron(train_data=train_data, test_data=test_data, filter_dict=feature_dict, baseline=is_baseline,
                      early_stopping=early_stopping)
-    clf.fit(num_iter=num_iter)
+    clf.fit(num_iter=num_iter, debug=True)
 
 
 if __name__ == '__main__':

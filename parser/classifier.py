@@ -1,4 +1,4 @@
-from parser.features import get_features, init_feature_functions, compute_features_size
+from parser.features import get_features, init_feature_functions, compute_features_size, debug_features
 from parser import chu_liu
 import numpy as np
 from parser.common import pickle_save, timeit
@@ -7,6 +7,7 @@ EARLY_STOPPING_ITERATIONS = 20
 
 
 class Perceptron:
+    @timeit
     def __init__(self, train_data, test_data, filter_dict, baseline, early_stopping):
         self.num_iter = 1
         self.train_data = train_data
@@ -15,9 +16,11 @@ class Perceptron:
         self.ground_graphs = {}
         self.get_ground_graphs(train_data)
         self.baseline = baseline
-        self.callables_dict, self.idx_dict = init_feature_functions(train_data, filter_dict, baseline)
+        self.callables_dict, self.idx_dict, self.feature_counts = \
+            init_feature_functions(train_data, filter_dict, baseline)
         self.m = compute_features_size(self.callables_dict)
         self.w = np.zeros(self.m)
+        self.best_w = np.zeros(self.m)
         # in-training measures
         self.train_accuracy = 0
         self.test_accuracy = 0
@@ -27,7 +30,7 @@ class Perceptron:
         self.early_stopping = early_stopping
 
     @timeit
-    def fit(self, num_iter=10):
+    def fit(self, num_iter=10, debug=False):
         self.num_iter = num_iter
         graphs = []
 
@@ -60,6 +63,7 @@ class Perceptron:
             if self.test_accuracy > self.best_accuracy:
                 print("Reached best accuracy, saving model")
                 self.best_accuracy = self.test_accuracy
+                self.best_w = self.w
                 pickle_save(self.w, 'w.pickle')
             else:
                 self.iter_no_change += 1
@@ -73,6 +77,8 @@ class Perceptron:
                     pickle_save(self.w, 'w%d.pickle' % i)
 
         print("Fit finished, best test accuracy: %f" % self.best_accuracy)
+        if debug:
+            debug_features(self.callables_dict, self.idx_dict, self.best_w, self.feature_counts)
 
     def predict(self, data):
         graphs = []

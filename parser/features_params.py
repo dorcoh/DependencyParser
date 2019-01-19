@@ -31,8 +31,10 @@ filter_dict_model = {
     'parent_child_word': 0,
     'parent_child_pos': 0,
     # extra
-    'pre_child_pos': 0,
-    'next_child_pos': 0,
-    'next_parent_pos': 0,
-    'pre_parent_pos': 0
+    'pos_next_parent_previous_child': 0,
+    'pos_previous_parent_previous_child': 0,
+    'pos_next_parent_next_child': 0,
+    'pos_previous_parent_next_child': 0,
+    'pos_parent_child_sibling': 0,
+    'word_parent_child_sibling': 0
 }
