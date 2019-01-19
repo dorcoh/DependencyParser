@@ -61,8 +61,7 @@ class Perceptron:
         graphs_mst = []
 
         for sentence in data:
-            graphs.append({'sentence': sentence, 'sent_feat': self.sentence_to_features(sentence),
-                           'sent_graph': self.sentence_to_graph(sentence)})
+            graphs.append({'sent_graph': self.sentence_to_graph(sentence)})
 
         for idx, graph_dict in enumerate(graphs):
             weighted_graph = self.get_weighted_graph(graph_dict['sent_graph'])
