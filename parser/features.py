@@ -106,8 +106,8 @@ class FeatureFunction(ABC):
     def filter_features(self, min_count):
         to_remove = []
         for feature, count in self.feature_dict.items():
-            if not count >= min_count:
-                to_remove.append(feature)
+            if not count > min_count:
+                    to_remove.append(feature)
 
         for feature in to_remove:
             del self.feature_dict[feature]
@@ -391,11 +391,13 @@ def get_features(sentence, child, parent_id, callables_dict, idx_dict):
 
 def debug_features(callables_dict, idx_dict, w, feature_counts):
     print("Debugging features")
+    s = ""
     for i, elem in enumerate(w):
         if elem == 0:
             rev_idx_dict = dict((v, k) for k, v in idx_dict.items())
-            print("Feature " + str(rev_idx_dict[i]) + " , count: " + str(feature_counts[rev_idx_dict[i]]))
-
+            s += "Feature " + str(rev_idx_dict[i]) + " , count: " + str(feature_counts[rev_idx_dict[i]]) + "\n"
+    with open("debug_features.log", 'w') as handle:
+        handle.write(s)
     # for name, feature_functions in callables_dict.items():
     #     print("10% lowest features counts in " + name)
     #     last_idx = int(len(feature_functions.feature_dict.items()) / 10)
