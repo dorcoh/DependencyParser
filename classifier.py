@@ -1,25 +1,32 @@
 from features import get_features, init_feature_functions, compute_features_size
 import chu_liu
 import numpy as np
-from common import pickle_save, pickle_load, timeit
+from common import pickle_save, timeit
+
+EARLY_STOPPING_ITERATIONS = 20
 
 
 class Perceptron:
-    def __init__(self, train_data, test_data, filter_dict, baseline):
+    def __init__(self, train_data, test_data, filter_dict, baseline, early_stopping):
         self.num_iter = 1
         self.train_data = train_data
+        self.test_data = test_data
         self.features_idx = []
         self.ground_graphs = {}
         self.get_ground_graphs(train_data)
+        self.baseline = baseline
         self.callables_dict, self.idx_dict = init_feature_functions(train_data, filter_dict, baseline)
         self.m = compute_features_size(self.callables_dict)
         self.w = np.zeros(self.m)
         # in-training measures
         self.train_accuracy = 0
         self.test_accuracy = 0
+        self.best_accuracy = 0
         self.iter_num = 0
-        self.test_data = test_data
+        self.iter_no_change = 0
+        self.early_stopping = early_stopping
 
+    @timeit
     def fit(self, num_iter=10):
         self.num_iter = num_iter
         graphs = []
@@ -28,7 +35,7 @@ class Perceptron:
             graphs.append({'sentence': sentence, 'sent_feat': self.sentence_to_features(sentence),
                            'sent_graph': self.sentence_to_graph(sentence)})
 
-        for i in range(1,self.num_iter+1):
+        for i in range(1, self.num_iter+1):
             for idx, graph_dict in enumerate(graphs):
                 ground_graph = self.ground_graphs[idx]
                 weighted_graph = self.get_weighted_graph(graph_dict['sent_graph'])
@@ -50,11 +57,22 @@ class Perceptron:
             self.update_measures()
             self.print_stats(i)
             # keep w
-            if i in [20, 50, 80, 100]:
-                pickle_save(self.w, 'w%d.pickle' % i)
+            if self.test_accuracy > self.best_accuracy:
+                print("Reached best accuracy, saving model")
+                self.best_accuracy = self.test_accuracy
+                pickle_save(self.w, 'w.pickle')
+            else:
+                self.iter_no_change += 1
 
-        print('fit finished')
-        print(self.w)
+            if self.iter_no_change > EARLY_STOPPING_ITERATIONS:
+                print("Breaking training loop due to early stopping")
+                break
+
+            if i in [20, 50, 80, 100]:
+                if self.baseline:
+                    pickle_save(self.w, 'w%d.pickle' % i)
+
+        print("Fit finished, best test accuracy: %f" % self.best_accuracy)
 
     def predict(self, data):
         graphs = []

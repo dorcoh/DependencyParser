@@ -10,7 +10,7 @@ filter_dict = {
     'child_pos': 0,
     'parent_pos_child_word_pos': 0,
     'parent_word_pos_child_pos': 0,
-    'parent_child_pos': 0,
+    'parent_child_pos': 0
 }
 
 # competition model
