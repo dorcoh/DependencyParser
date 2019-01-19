@@ -1,17 +1,17 @@
-from features import get_edge_features, init_feature_functions, compute_features_size
+from features import get_features, init_feature_functions, compute_features_size
 import chu_liu
 import numpy as np
 from common import pickle_save, pickle_load, timeit
 
 
 class Perceptron:
-    def __init__(self, train_data, test_data, filter_dict):
+    def __init__(self, train_data, test_data, filter_dict, baseline):
         self.num_iter = 1
         self.train_data = train_data
         self.features_idx = []
         self.ground_graphs = {}
         self.get_ground_graphs(train_data)
-        self.callables_dict, self.idx_dict = init_feature_functions(train_data, filter_dict)
+        self.callables_dict, self.idx_dict = init_feature_functions(train_data, filter_dict, baseline)
         self.m = compute_features_size(self.callables_dict)
         self.w = np.zeros(self.m)
         # in-training measures
@@ -81,8 +81,8 @@ class Perceptron:
         for key, item in sentence.items():
             if key != 0:
                 graph[key] = {}
-                graph[0][key] = get_edge_features(sentence, item, item[3],
-                                                  self.callables_dict, self.idx_dict)
+                graph[0][key] = get_features(sentence, item, item[3],
+                                             self.callables_dict, self.idx_dict)
 
         for child in sentence.values():
             for parent in sentence.values():
@@ -90,8 +90,8 @@ class Perceptron:
                     continue
                 if parent[0] not in graph:
                     graph[parent[0]] = {}
-                graph[parent[0]][child[0]] = get_edge_features(sentence, child, parent[0],
-                                                               self.callables_dict, self.idx_dict)
+                graph[parent[0]][child[0]] = get_features(sentence, child, parent[0],
+                                                          self.callables_dict, self.idx_dict)
 
         return graph
 
@@ -99,8 +99,8 @@ class Perceptron:
         features = []
         for vertex, edges in graph.successors.items():
             for neigh in edges:
-                features += get_edge_features(sentence, sentence[neigh], sentence[vertex][0],
-                                              self.callables_dict, self.idx_dict)
+                features += get_features(sentence, sentence[neigh], sentence[vertex][0],
+                                         self.callables_dict, self.idx_dict)
 
         return features
 
@@ -109,7 +109,7 @@ class Perceptron:
         for idx, word in sentence.items():
             if idx == 0:
                 continue
-            features += get_edge_features(sentence, word, word[3], self.callables_dict, self.idx_dict)
+            features += get_features(sentence, word, word[3], self.callables_dict, self.idx_dict)
 
         return features
 

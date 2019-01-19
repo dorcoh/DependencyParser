@@ -36,17 +36,15 @@ filter_dict_model = {
     'parent_child_word': 0,
     'parent_child_pos': 0,
     # extra
-    'parent_child_pos_distance': 0,
-    'parent_child_word_distance': 0,
     'pre_child_pos': 0,
     'next_child_pos': 0,
-    'next_parent_pos': 0#,
-    #'pre_parent_pos': 0
+    'next_parent_pos': 0,
+    'pre_parent_pos': 0
 }
 
 
-clf = Perceptron(train_data=train_data, test_data=test_data, filter_dict=filter_dict)
-clf.fit(num_iter=1)
+clf = Perceptron(train_data=train_data, test_data=test_data, filter_dict=filter_dict, baseline=False)
+clf.fit(num_iter=10)
 y_pred = clf.predict(test_data)
 # final acc
 ground_graphs = clf.ground_graph_test(test_data)

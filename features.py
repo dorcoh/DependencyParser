@@ -1,13 +1,13 @@
 from abc import ABC, abstractmethod
-from scipy.sparse import csr_matrix
-from common import optional
+from common import optional, baseline
 import copy
 
 
 class FeatureFunction(ABC):
-    def __init__(self, name, data):
+    def __init__(self, name, data, baseline):
         self.feature_dict = {}
         self.name = name
+        self.baseline = baseline
         self.preprocess(data)
 
     def parse(self, tup, sentence):
@@ -18,7 +18,7 @@ class FeatureFunction(ABC):
         parent_pos = sentence[parent_id][2]
         child_word = tup[1]
         child_pos = tup[2]
-        distance = parent_id - child_id - 1  # todo: bidirectional
+        distance = parent_id - child_id
         parent_before = 1 if parent_id > child_id else 0
 
         verb_between = 0
@@ -43,7 +43,7 @@ class FeatureFunction(ABC):
             'parent_pos': parent_pos,
             'child_word': child_word,
             'child_pos': child_pos,
-            'distance': distance,
+            'distance_pc': distance,
             'parent_before': parent_before,
             'verb_between': verb_between,
             'noun_between': noun_between
@@ -136,42 +136,54 @@ class FeatureFunction(ABC):
 class ParentWordPos(FeatureFunction):
 
     def extract_key(self, c):
-        key = (1, c['parent_word'], c['parent_pos'])
+        key = (1, c['parent_word'], c['parent_pos'], c['distance_pc'])
+        if self.baseline:
+            return key[:-1]
         return key
 
 
 class ParentWord(FeatureFunction):
 
     def extract_key(self, c):
-        key = (2, c['parent_word'])
+        key = (2, c['parent_word'], c['distance_pc'])
+        if self.baseline:
+            return key[:-1]
         return key
 
 
 class ParentPos(FeatureFunction):
 
     def extract_key(self, c):
-        key = (3, c['parent_pos'])
+        key = (3, c['parent_pos'], c['distance_pc'])
+        if self.baseline:
+            return key[:-1]
         return key
 
 
 class ChildWordPos(FeatureFunction):
 
     def extract_key(self, c):
-        key = (4, c['child_word'], c['child_pos'])
+        key = (4, c['child_word'], c['child_pos'], c['distance_pc'])
+        if self.baseline:
+            return key[:-1]
         return key
 
 
 class ChildWord(FeatureFunction):
 
     def extract_key(self, c):
-        key = (5, c['child_word'])
+        key = (5, c['child_word'], c['distance_pc'])
+        if self.baseline:
+            return key[:-1]
         return key
 
 
 class ChildPos(FeatureFunction):
 
     def extract_key(self, c):
-        key = (6, c['child_pos'])
+        key = (6, c['child_pos'], c['distance_pc'])
+        if self.baseline:
+            return key[:-1]
         return key
 
 # bigram
@@ -180,65 +192,55 @@ class ChildPos(FeatureFunction):
 class ParentChildWordPos(FeatureFunction):
 
     def extract_key(self, c):
-        key = (7, c['parent_word'], c['parent_pos'], c['child_word'], c['child_pos'])
+        key = (7, c['parent_word'], c['parent_pos'], c['child_word'], c['child_pos'], c['distance_pc'])
         return key
 
 
 class ParentPosChildWordPos(FeatureFunction):
 
     def extract_key(self, c):
-        key = (8, c['parent_pos'], c['child_word'], c['child_pos'])
+        key = (8, c['parent_pos'], c['child_word'], c['child_pos'], c['distance_pc'])
+        if self.baseline:
+            return key[:-1]
         return key
 
 
 class ParentWordChildWordPos(FeatureFunction):
 
     def extract_key(self, c):
-        key = (9, c['parent_word'], c['child_word'], c['child_pos'])
+        key = (9, c['parent_word'], c['child_word'], c['child_pos'], c['distance_pc'])
         return key
 
 
 class ParentWordPosChildPos(FeatureFunction):
 
     def extract_key(self, c):
-        key = (10, c['parent_word'], c['parent_pos'], c['child_pos'])
+        key = (10, c['parent_word'], c['parent_pos'], c['child_pos'], c['distance_pc'])
+        if self.baseline:
+            return key[:-1]
         return key
 
 
 class ParentWordPosChildWord(FeatureFunction):
 
     def extract_key(self, c):
-        key = (11, c['parent_word'], c['parent_pos'], c['child_word'])
+        key = (11, c['parent_word'], c['parent_pos'], c['child_word'], c['distance_pc'])
         return key
 
 
 class ParentChildWord(FeatureFunction):
 
     def extract_key(self, c):
-        key = (12, c['parent_word'], c['child_word'])
+        key = (12, c['parent_word'], c['child_word'], c['distance_pc'])
         return key
 
 
 class ParentChildPos(FeatureFunction):
 
     def extract_key(self, c):
-        key = (13, c['parent_pos'], c['child_pos'])
-        return key
-
-# extra
-
-
-class PosDistance(FeatureFunction):
-
-    def extract_key(self, c):
-        key = (14, c['parent_pos'], c['child_pos'], c['distance'])
-        return key
-
-
-class WordDistance(FeatureFunction):
-
-    def extract_key(self, c):
-        key = (15, c['parent_word'], c['child_word'], c['distance'])
+        key = (13, c['parent_pos'], c['child_pos'], c['distance_pc'])
+        if self.baseline:
+            return key[:-1]
         return key
 
 
@@ -247,7 +249,7 @@ class PreChildPos(FeatureFunction):
 
     @optional
     def extract_key(self, c):
-        key = (16, c['parent_pos'], c['child_pos'], c['p_child_pos'])
+        key = (14, c['parent_pos'], c['child_pos'], c['p_child_pos'])
         return key
 
 
@@ -255,7 +257,7 @@ class NextChildPos(FeatureFunction):
 
     @optional
     def extract_key(self, c):
-        key = (17, c['parent_pos'], c['child_pos'], c['n_child_pos'])
+        key = (15, c['parent_pos'], c['child_pos'], c['n_child_pos'])
         return key
 
 
@@ -263,7 +265,7 @@ class NextParentPos(FeatureFunction):
 
     @optional
     def extract_key(self, c):
-        key = (18, c['parent_pos'], c['child_pos'], c['n_parent_pos'])
+        key = (16, c['parent_pos'], c['child_pos'], c['n_parent_pos'])
         return key
 
 
@@ -271,7 +273,7 @@ class PreParentPos(FeatureFunction):
 
     @optional
     def extract_key(self, c):
-        key = (19, c['parent_pos'], c['child_pos'], c['p_parent_pos'])
+        key = (17, c['parent_pos'], c['child_pos'], c['p_parent_pos'])
         return key
 
 
@@ -292,8 +294,6 @@ feature_functions = {
     'parent_child_word': ParentChildWord,
     'parent_child_pos': ParentChildPos,
     # extra
-    'parent_child_pos_distance': PosDistance,
-    'parent_child_word_distance': WordDistance,
     'pre_child_pos': PreChildPos,
     'next_child_pos': NextChildPos,
     'next_parent_pos': NextParentPos,
@@ -301,10 +301,12 @@ feature_functions = {
 }
 
 
-def init_feature_functions(train_data, filter_dict):
+def init_feature_functions(train_data, filter_dict, baseline):
     callables_dict = {}
     for name in filter_dict.keys():
-        callables_dict[name] = feature_functions[name](name, train_data)
+        if name == 'parent_word_pos':
+            pass
+        callables_dict[name] = feature_functions[name](name, train_data, baseline)
         callables_dict[name].filter_features(filter_dict[name])
 
     idx_dic = {}
@@ -329,8 +331,7 @@ def compute_features_size(callables_dict):
     return m
 
 
-def get_edge_features(sentence, child, parent_id, callables_dict, idx_dict):
-    #  TODO: child could also be ROOT here, check if ok
+def get_features(sentence, child, parent_id, callables_dict, idx_dict):
     feature_indices = []
     for name, feature_function in callables_dict.items():
         feature_id = feature_function.get_enabled_feature(sentence, child, parent_id, idx_dict)
@@ -338,32 +339,3 @@ def get_edge_features(sentence, child, parent_id, callables_dict, idx_dict):
             feature_indices.append(feature_id)
 
     return feature_indices
-
-
-if __name__ == '__main__':
-    # test
-    from decoder import Data
-
-    data = Data('resources/test.labeled')
-    filter_dict = {
-        'parent_word_pos': 3,
-        'parent_word': 3,
-        'parent_pos': 1,
-        'child_word_pos': 1,
-        'child_word': 1
-    }
-    callables_dict, idx_dict = init_feature_functions(data, filter_dict)
-    m = compute_features_size(callables_dict)
-    for sent in data:
-        data, row, col = [], [], []
-        # test for one child,parent
-        features_ids = get_edge_features(sent, sent[0], 4, callables_dict, idx_dict)
-        for name, feature_function in callables_dict.items():
-            data_tmp, row_tmp, col_tmp = feature_function(sentence=sent, idx_dict=idx_dict)
-            data += data_tmp
-            row += row_tmp
-            col += col_tmp
-
-        sentence_feature_vector = csr_matrix((data, (row, col)), shape=(1, m))
-
-        print(sentence_feature_vector)
