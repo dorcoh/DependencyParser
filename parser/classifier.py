@@ -30,7 +30,7 @@ class Perceptron:
         self.early_stopping = early_stopping
 
     @timeit
-    def fit(self, num_iter=10, debug=False):
+    def fit(self, num_iter=10, debug=False, w_filename='w'):
         self.num_iter = num_iter
         graphs = []
 
@@ -64,7 +64,7 @@ class Perceptron:
                 print("Reached best accuracy, saving model")
                 self.best_accuracy = self.test_accuracy
                 self.best_w = self.w
-                pickle_save(self.w, 'w.pickle')
+                pickle_save(self.w, w_filename + '.pickle')
                 self.iter_no_change = 0
             else:
                 self.iter_no_change += 1
@@ -75,7 +75,7 @@ class Perceptron:
 
             if i in [20, 50, 80, 100]:
                 if self.baseline:
-                    pickle_save(self.w, 'w%d.pickle' % i)
+                    pickle_save(self.w, w_filename + '%d.pickle' % i)
 
         print("Fit finished, best test accuracy: %f" % self.best_accuracy)
         if debug:

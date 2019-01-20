@@ -57,7 +57,53 @@ def multiple(key_in, key_out):
     return decorator
 
 
+def parse(tup, sentence):
+    """parse current sample feature components into shared dict"""
+    parent_id = int(tup[3])
+    child_id = int(tup[0])
+    parent_word = sentence[parent_id][1]
+    parent_pos = sentence[parent_id][2]
+    child_word = tup[1]
+    child_pos = tup[2]
+    # direction = 1 if parent_id - child_id > 0 else 0
+    distance = calc_distance(parent_id, child_id)
 
+    comp = {
+        'parent_id': parent_id,
+        'child_id': child_id,
+        'parent_word': parent_word,
+        'parent_pos': parent_pos,
+        'child_word': child_word,
+        'child_pos': child_pos,
+        # 'direction': direction,
+        'distance': distance
+    }
+
+    # optional
+    if child_id < len(sentence) - 1:
+        comp['n_child_pos'] = sentence[child_id+1][2]
+
+    if child_id > 1:
+        comp['p_child_pos'] = sentence[child_id-1][2]
+
+    if parent_id < len(sentence) - 1:
+        comp['n_parent_pos'] = sentence[parent_id+1][3]
+
+    if parent_id > 1:
+        comp['p_parent_pos'] = sentence[parent_id-1][3]
+
+    # check for child of child or sibling
+    childs = []
+    for idx, word in sentence.items():
+        if idx == 0:
+            continue
+        if word[3] == child_id or word[3] == parent_id:  # child's child or sibling
+            if word[0] != child_id:
+                childs.append(word)
+    if childs:
+        comp['childs'] = childs
+
+    return comp
 
 
 class FeatureFunction(ABC):
@@ -67,58 +113,10 @@ class FeatureFunction(ABC):
         self.baseline = baseline
         self.preprocess(data)
 
-    def parse(self, tup, sentence):
-        """parse current sample feature components into shared dict"""
-        parent_id = int(tup[3])
-        child_id = int(tup[0])
-        parent_word = sentence[parent_id][1]
-        parent_pos = sentence[parent_id][2]
-        child_word = tup[1]
-        child_pos = tup[2]
-        # direction = 1 if parent_id - child_id > 0 else 0
-        distance = calc_distance(parent_id, child_id)
-
-        comp = {
-            'parent_id': parent_id,
-            'child_id': child_id,
-            'parent_word': parent_word,
-            'parent_pos': parent_pos,
-            'child_word': child_word,
-            'child_pos': child_pos,
-            # 'direction': direction,
-            'distance': distance
-        }
-
-        # optional
-        if child_id < len(sentence) - 1:
-            comp['n_child_pos'] = sentence[child_id+1][2]
-
-        if child_id > 1:
-            comp['p_child_pos'] = sentence[child_id-1][2]
-
-        if parent_id < len(sentence) - 1:
-            comp['n_parent_pos'] = sentence[parent_id+1][3]
-
-        if parent_id > 1:
-            comp['p_parent_pos'] = sentence[parent_id-1][3]
-
-        # check for child of child or sibling
-        childs = []
-        for idx, word in sentence.items():
-            if idx == 0:
-                continue
-            if word[3] == child_id or word[3] == parent_id:  # child's child or sibling
-                if word[0] != child_id:
-                    childs.append(word)
-        if childs:
-            comp['childs'] = childs
-
-        return comp
-
     def preprocess(self, data):
         for sentence in data:
             for i in range(1, len(sentence.keys())):
-                comp = self.parse(sentence[i], sentence)
+                comp = parse(sentence[i], sentence)
                 key = self.extract_key(comp)
                 if key is None:
                     continue
@@ -146,38 +144,8 @@ class FeatureFunction(ABC):
         key has a form (feature_id, attr1, attr2..)"""
         pass
 
-    def __call__(self, **kwargs):
-        """actual feature function - f(x,t) - applied per sample
-        returns feature vector as data, row, col"""
-        sentence = kwargs['sentence']
-        idx_dict = kwargs['idx_dict']
-        temp_dict = {}
-        for tup in sentence:
-            comp = self.parse(tup, sentence)
-            key = self.extract_key(comp)
-            # filter out features
-            if key not in self.feature_dict:
-                return [], [], []
-
-            if key in temp_dict:
-                temp_dict[key] += 1
-            else:
-                temp_dict[key] = 1
-
-        data, row, col = [], [], []
-        for key, value in temp_dict.items():
-            row.append(0)
-            col.append(idx_dict[key])
-            data.append(value)
-
-        del temp_dict
-        return data, row, col
-
-    def get_enabled_feature(self, sentence, child, parent_id, idx_dict):
+    def get_enabled_feature(self, comp, idx_dict):
         """Returns enable feature id for (parent, child), if empty returns None"""
-        child = copy(child)
-        child[3] = parent_id
-        comp = self.parse(child, sentence)
         key = self.extract_key(comp)
         if not key in self.feature_dict:
             return None
@@ -405,8 +373,10 @@ def compute_features_size(callables_dict):
 
 def get_features(sentence, child, parent_id, callables_dict, idx_dict):
     feature_indices = []
+    tup = [child[0], child[1], child[2], parent_id]
+    comp = parse(tup, sentence)
     for name, feature_function in callables_dict.items():
-        feature_id = feature_function.get_enabled_feature(sentence, child, parent_id, idx_dict)
+        feature_id = feature_function.get_enabled_feature(comp, idx_dict)
         if feature_id:
             feature_indices.append(feature_id)
 
