@@ -2,13 +2,15 @@ from parser.features import get_features, init_feature_functions, compute_featur
 from parser import chu_liu
 import numpy as np
 from parser.common import pickle_save, timeit
+from time import time
+
 
 EARLY_STOPPING_ITERATIONS = 20
 
 
 class Perceptron:
     @timeit
-    def __init__(self, train_data, test_data, filter_dict, baseline, early_stopping):
+    def __init__(self, train_data, test_data, filter_dict, baseline, early_stopping, model_name):
         self.num_iter = 1
         self.train_data = train_data
         self.test_data = test_data
@@ -16,8 +18,13 @@ class Perceptron:
         self.ground_graphs = {}
         self.get_ground_graphs(train_data)
         self.baseline = baseline
+        self.early_stopping = early_stopping
+        self.model_name = model_name
         self.callables_dict, self.idx_dict, self.feature_counts = \
             init_feature_functions(train_data, filter_dict, baseline)
+        # save features
+        features_tuple = (self.callables_dict, self.idx_dict, self.feature_counts)
+        pickle_save(features_tuple, 'features-' + model_name + '.pickle')
         self.m = compute_features_size(self.callables_dict)
         self.w = np.zeros(self.m)
         self.best_w = np.zeros(self.m)
@@ -27,18 +34,20 @@ class Perceptron:
         self.best_accuracy = 0
         self.iter_num = 0
         self.iter_no_change = 0
-        self.early_stopping = early_stopping
 
     @timeit
-    def fit(self, num_iter=10, debug=False, w_filename='w'):
+    def fit(self, num_iter=10, debug=False):
         self.num_iter = num_iter
         graphs = []
 
+        t = time()
         for sentence in self.train_data:
             graphs.append({'sentence': sentence, 'sent_feat': self.sentence_to_features(sentence),
                            'sent_graph': self.sentence_to_graph(sentence)})
+        print("Fit: process features took %.4f" % (time() - t) + " seconds")
 
         for i in range(1, self.num_iter+1):
+            t = time()
             for idx, graph_dict in enumerate(graphs):
                 ground_graph = self.ground_graphs[idx]
                 weighted_graph = self.get_weighted_graph(graph_dict['sent_graph'])
@@ -58,14 +67,17 @@ class Perceptron:
                         self.w[feature] -= 1
 
             self.update_measures()
-            self.print_stats(i)
+            self.print_stats(i, t)
             # keep w
             if self.test_accuracy > self.best_accuracy:
                 print("Reached best accuracy, saving model")
                 self.best_accuracy = self.test_accuracy
                 self.best_w = self.w
-                pickle_save(self.w, w_filename + '.pickle')
+                pickle_save(self.w, 'w-' + self.model_name + '.pickle')
                 self.iter_no_change = 0
+                if debug:
+                    debug_features(self.callables_dict, self.idx_dict, self.best_w, self.feature_counts,
+                                   self.model_name)
             else:
                 self.iter_no_change += 1
 
@@ -75,11 +87,9 @@ class Perceptron:
 
             if i in [20, 50, 80, 100]:
                 if self.baseline:
-                    pickle_save(self.w, w_filename + '%d.pickle' % i)
+                    pickle_save(self.w, 'w-' + self.model_name + '%d.pickle' % i)
 
         print("Fit finished, best test accuracy: %f" % self.best_accuracy)
-        if debug:
-            debug_features(self.callables_dict, self.idx_dict, self.best_w, self.feature_counts)
 
     def predict(self, data):
         graphs = []
@@ -207,8 +217,8 @@ class Perceptron:
         test_y_pred = self.predict(self.test_data)
         self.test_accuracy = self.get_accuracy(test_y_pred, test_y_true)
 
-    def print_stats(self, iter_num):
-        print("finished iter " + str(iter_num))
+    def print_stats(self, iter_num, t):
+        print("finished iter " + str(iter_num) + ": %.4f"  % (time()-t) + " seconds")
         print("Current accuracy: %f" % self.train_accuracy)
         print("Test accuracy: %f" % self.test_accuracy)
         w_status = (np.sum(self.w > 0), np.sum(self.w < 0), np.sum(self.w == 0))
