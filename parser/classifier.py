@@ -65,10 +65,11 @@ class Perceptron:
                 self.best_accuracy = self.test_accuracy
                 self.best_w = self.w
                 pickle_save(self.w, 'w.pickle')
+                self.iter_no_change = 0
             else:
                 self.iter_no_change += 1
 
-            if self.iter_no_change > EARLY_STOPPING_ITERATIONS:
+            if self.early_stopping and self.iter_no_change > EARLY_STOPPING_ITERATIONS:
                 print("Breaking training loop due to early stopping")
                 break
 
