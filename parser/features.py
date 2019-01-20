@@ -6,9 +6,9 @@ import operator
 def calc_distance(id_a, id_b):
     diff = id_a - id_b
     if diff > 3:
-        distance = 3
+        distance = 4
     elif diff < -3:
-        distance = -3
+        distance = -4
     else:
         distance = diff
 
@@ -108,7 +108,8 @@ class FeatureFunction(ABC):
             if idx == 0:
                 continue
             if word[3] == child_id or word[3] == parent_id:  # child's child or sibling
-                childs.append(word)
+                if word[0] != child_id:
+                    childs.append(word)
         if childs:
             comp['childs'] = childs
 
