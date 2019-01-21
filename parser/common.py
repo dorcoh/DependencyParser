@@ -50,3 +50,27 @@ def timeit(method):
         return result
 
     return timed
+
+
+def transpose_tree(tree):
+    tmp_dic = {}
+
+    for key, value in tree.items():
+        for item in value:
+            tmp_dic[item] = key
+
+    return tmp_dic
+
+
+def tag_comp(y_pred, test_sent, file_name):
+    with open(file_name, mode='w', newline='') as comp_file:
+        writer = csv.writer(comp_file, delimiter='\t', quotechar='"', quoting=csv.QUOTE_MINIMAL)
+
+        for sentence_idx, sentence in enumerate(test_sent):
+            successors = y_pred[sentence_idx].successors
+            transposed_tree = transpose_tree(successors)
+            for word_idx, word in sentence.items():
+                if word_idx == 0:
+                    continue
+                writer.writerow([word_idx, word[1], '_', word[2], '_', '_', transposed_tree[word_idx], '_', '', '_'])
+            writer.writerow([])

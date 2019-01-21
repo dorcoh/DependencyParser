@@ -1,5 +1,6 @@
 import sys
 from parser.decoder import Data
+from parser.common import tag_comp
 from parser.classifier import Perceptron
 from parser.features_params import filter_dict, filter_dict_model
 
@@ -20,12 +21,14 @@ def main(argv):
     else:
         feature_dict = filter_dict_model
 
-    train_data = Data('resources/train.labeled')
-    test_data = Data('resources/test.labeled')
+    train_data = Data('resources/dev_20.labeled')
+    test_data = Data('resources/dev_20.labeled')
 
     clf = Perceptron(train_data=train_data, test_data=test_data, filter_dict=feature_dict, baseline=is_baseline,
                      early_stopping=early_stopping, model_name=model_name)
     clf.fit(num_iter=num_iter, debug=False)
+    y_pred = clf.predict(test_data)
+    tag_comp(y_pred, test_data, 'ItaiTag.labeled')
 
 
 if __name__ == '__main__':

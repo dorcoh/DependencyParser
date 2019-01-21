@@ -10,23 +10,30 @@ EARLY_STOPPING_ITERATIONS = 20
 
 class Perceptron:
     @timeit
-    def __init__(self, train_data, test_data, filter_dict, baseline, early_stopping, model_name):
+    def __init__(self, train_data=None, test_data=None, filter_dict=None, baseline=None, early_stopping=None,
+                 model_name=None, w=None, features_tuple_pick=None, comp=False):
+        self.root = [0, 'ROOT', 'ROOT', 0]
         self.num_iter = 1
         self.train_data = train_data
         self.test_data = test_data
         self.features_idx = []
         self.ground_graphs = {}
-        self.get_ground_graphs(train_data)
+        if not comp:
+            self.get_ground_graphs(train_data)
         self.baseline = baseline
         self.early_stopping = early_stopping
         self.model_name = model_name
-        self.callables_dict, self.idx_dict, self.feature_counts = \
-            init_feature_functions(train_data, filter_dict, baseline)
-        # save features
-        features_tuple = (self.callables_dict, self.idx_dict, self.feature_counts)
-        pickle_save(features_tuple, 'features-' + model_name + '.pickle')
+        if features_tuple_pick is None:
+            self.callables_dict, self.idx_dict, self.feature_counts = init_feature_functions(train_data, filter_dict, baseline)
+            features_tuple = (self.callables_dict, self.idx_dict, self.feature_counts)
+            pickle_save(features_tuple, 'features-' + model_name + '.pickle')
+        else:
+            self.callables_dict, self.idx_dict, self.feature_counts = features_tuple_pick
         self.m = compute_features_size(self.callables_dict)
-        self.w = np.zeros(self.m)
+        if w is not None:
+            self.w = w
+        else:
+            self.w = np.zeros(self.m)
         self.best_w = np.zeros(self.m)
         # in-training measures
         self.train_accuracy = 0
@@ -34,6 +41,7 @@ class Perceptron:
         self.best_accuracy = 0
         self.iter_num = 0
         self.iter_no_change = 0
+        self.comp = comp
 
     @timeit
     def fit(self, num_iter=10, debug=False):
@@ -96,7 +104,10 @@ class Perceptron:
         graphs_mst = []
 
         for sentence in data:
-            graphs.append({'sent_graph': self.sentence_to_graph(sentence)})
+            if not self.comp:
+                graphs.append({'sent_graph': self.sentence_to_graph(sentence)})
+            else:
+                graphs.append({'sent_graph': self.sentence_to_graph_comp(sentence)})
 
         for idx, graph_dict in enumerate(graphs):
             weighted_graph = self.get_weighted_graph(graph_dict['sent_graph'])
@@ -115,12 +126,31 @@ class Perceptron:
         for key, item in sentence.items():
             if key != 0:
                 graph[key] = {}
-                graph[0][key] = get_features(sentence, item, item[3],
-                                             self.callables_dict, self.idx_dict)
+                graph[0][key] = get_features(sentence, self.root, key, self.callables_dict, self.idx_dict)
 
         for child in sentence.values():
             for parent in sentence.values():
                 if child[0] == parent[0] or child[0] == -1 or parent[0] == -1:
+                    continue
+                if parent[0] not in graph:
+                    graph[parent[0]] = {}
+                graph[parent[0]][child[0]] = get_features(sentence, child, parent[0],
+                                                          self.callables_dict, self.idx_dict)
+
+        return graph
+
+    def sentence_to_graph_comp(self, sentence):
+        graph = {0: {}}
+
+        for key, item in sentence.items():
+            if key != 0:
+                graph[key] = {}
+                graph[0][key] = get_features(sentence, self.root, key,
+                                             self.callables_dict, self.idx_dict)
+
+        for child in sentence.values():
+            for parent in sentence.values():
+                if child[0] == parent[0] or child[0] == 0 or parent[0] == 0:
                     continue
                 if parent[0] not in graph:
                     graph[parent[0]] = {}
