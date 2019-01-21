@@ -1,6 +1,5 @@
 from abc import ABC, abstractmethod
-from copy import copy
-import operator
+from collections import OrderedDict
 
 
 def calc_distance(id_a, id_b):
@@ -109,7 +108,7 @@ def parse(tup, sentence):
 
 class FeatureFunction(ABC):
     def __init__(self, name, data, baseline):
-        self.feature_dict = {}
+        self.feature_dict = OrderedDict()
         self.name = name
         self.baseline = baseline
         self.preprocess(data)
@@ -338,22 +337,47 @@ feature_functions = {
     # 'word_parent_child_sibling': WordParentChildSibling
 }
 
+feature_fncs = [
+    # unigram
+    ('parent_word_pos', ParentWordPos),
+    ('parent_word', ParentWord),
+    ('parent_pos', ParentPos),
+    ('child_word_pos',ChildWordPos),
+    ('child_word', ChildWord),
+    ('child_pos', ChildPos),
+    # bigram
+    ('parent_child_word_pos', ParentChildWordPos),
+    ('parent_pos_child_word_pos', ParentPosChildWordPos),
+    ('parent_word_child_word_pos', ParentWordChildWordPos),
+    ('parent_word_pos_child_pos', ParentWordPosChildPos),
+    ('parent_word_pos_child_word', ParentWordPosChildWord),
+    ('parent_child_word', ParentChildWord),
+    ('parent_child_pos', ParentChildPos),
+    # extra
+    ('pos_next_parent_previous_child', PosNeighA),
+    ('pos_previous_parent_previous_child', PosNeighB),
+    ('pos_next_parent_next_child', PosNeighC),
+    ('pos_previous_parent_next_child', PosNeighD)
+]
+
 
 def init_feature_functions(train_data, filter_dict, baseline):
-    callables_dict = {}
+    callables_dict = OrderedDict()
+    callables_tuple_list = []
     feature_counts = {}
-    for name in filter_dict.keys():
-        if name == 'parent_word_pos':
-            pass
-        callables_dict[name] = feature_functions[name](name, train_data, baseline)
-        callables_dict[name].filter_features(filter_dict[name])
-        # add feature dicts
-        feature_counts = {**callables_dict[name].feature_dict, **feature_counts}
+    i = 0
+    for name, feature_func in feature_fncs:
+        if name in filter_dict:
+            callables_tuple_list.append((name, feature_func(name, train_data, baseline)))
+            callables_tuple_list[i][1].filter_features(filter_dict[name])
+            i += 1
 
+    callables_dict = OrderedDict(callables_tuple_list)
     idx_dic = {}
     tmp_max = 0
     # build feature mapping
     for name, c in callables_dict.items():
+        feature_counts = {**callables_dict[name].feature_dict, **feature_counts}
         for k, v in c.feature_dict.items():
             idx_dic[k] = tmp_max
             tmp_max += 1
