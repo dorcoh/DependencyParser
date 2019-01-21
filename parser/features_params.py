@@ -34,9 +34,9 @@ filter_dict_model = {
     'pos_next_parent_previous_child': 0,
     'pos_previous_parent_previous_child': 0,
     'pos_next_parent_next_child': 0,
-    'pos_previous_parent_next_child': 0,
-    'pos_parent_child_sibling': 0,
-    'word_parent_child_sibling': 0
+    'pos_previous_parent_next_child': 0
+    # 'pos_parent_child_sibling': 0,
+    # 'word_parent_child_sibling': 0
 }
 
 # # competition model

@@ -87,21 +87,22 @@ def parse(tup, sentence):
         comp['p_child_pos'] = sentence[child_id-1][2]
 
     if parent_id < len(sentence) - 1:
-        comp['n_parent_pos'] = sentence[parent_id+1][3]
+        comp['n_parent_pos'] = sentence[parent_id+1][2]
 
     if parent_id > 1:
-        comp['p_parent_pos'] = sentence[parent_id-1][3]
+        comp['p_parent_pos'] = sentence[parent_id-1][2]
 
     # check for child of child or sibling
-    childs = []
-    for idx, word in sentence.items():
-        if idx == 0:
-            continue
-        if word[3] == child_id or word[3] == parent_id:  # child's child or sibling
-            if word[0] != child_id:
-                childs.append(word)
-    if childs:
-        comp['childs'] = childs
+    # childs = []
+    # for idx, word in sentence.items():
+    #     if idx == 0:
+    #         continue
+    #     if word[3] == child_id or word[3] == parent_id:  # child's child or sibling
+    #         if word[0] != child_id:
+    #             childs.append(word)
+    # if childs:
+    #     comp['childs'] = childs
+    #
 
     return comp
 
@@ -296,20 +297,20 @@ class PosNeighD(FeatureFunction):
         return key
 
 
-class PosParentChildSibling(FeatureFunction):
-
-    @multiple('childs', 'child_child_pos')
-    def extract_key(self, c):
-        key = (18, c['parent_pos'], c['child_pos'], c['child_child_pos'], c['distance'])
-        return key
-
-
-class WordParentChildSibling(FeatureFunction):
-
-    @multiple('childs', 'child_child_word')
-    def extract_key(self, c):
-        key = (19, c['parent_word'], c['child_word'], c['child_child_word'], c['distance'])
-        return key
+# class PosParentChildSibling(FeatureFunction):
+#
+#     @multiple('childs', 'child_child_pos')
+#     def extract_key(self, c):
+#         key = (18, c['parent_pos'], c['child_pos'], c['child_child_pos'], c['distance'])
+#         return key
+#
+#
+# class WordParentChildSibling(FeatureFunction):
+#
+#     @multiple('childs', 'child_child_word')
+#     def extract_key(self, c):
+#         key = (19, c['parent_word'], c['child_word'], c['child_child_word'], c['distance'])
+#         return key
 
 
 feature_functions = {
@@ -332,9 +333,9 @@ feature_functions = {
     'pos_next_parent_previous_child': PosNeighA,
     'pos_previous_parent_previous_child': PosNeighB,
     'pos_next_parent_next_child': PosNeighC,
-    'pos_previous_parent_next_child': PosNeighD,
-    'pos_parent_child_sibling': PosParentChildSibling,
-    'word_parent_child_sibling': WordParentChildSibling
+    'pos_previous_parent_next_child': PosNeighD
+    # 'pos_parent_child_sibling': PosParentChildSibling,
+    # 'word_parent_child_sibling': WordParentChildSibling
 }
 
 
