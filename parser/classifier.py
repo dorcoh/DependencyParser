@@ -78,6 +78,7 @@ class Perceptron:
                         self.w[feature] -= 1
 
             self.update_measures()
+            self.write_measures(i)
             self.print_stats(i, t)
             # keep w
             if self.test_accuracy > self.best_accuracy:
@@ -95,10 +96,6 @@ class Perceptron:
             if self.early_stopping and self.iter_no_change > EARLY_STOPPING_ITERATIONS:
                 print("Breaking training loop due to early stopping")
                 break
-
-            if i in [20, 50, 80, 100]:
-                if self.baseline:
-                    pickle_save(self.w, 'w-' + self.model_name + '%d.pickle' % i)
 
         print("Fit finished, best test accuracy: %f" % self.best_accuracy)
 
@@ -126,7 +123,7 @@ class Perceptron:
         for key, item in sentence.items():
             if key != 0:
                 graph[key] = {}
-                graph[0][key] = get_features(sentence, self.root, key, self.callables_dict, self.idx_dict)
+                graph[0][key] = get_features(sentence, self.root, key, self.callables_dict, self.idx_dict, self.baseline)
 
         for child in sentence.values():
             for parent in sentence.values():
@@ -135,7 +132,7 @@ class Perceptron:
                 if parent[0] not in graph:
                     graph[parent[0]] = {}
                 graph[parent[0]][child[0]] = get_features(sentence, child, parent[0],
-                                                          self.callables_dict, self.idx_dict)
+                                                          self.callables_dict, self.idx_dict, self.baseline)
 
         return graph
 
@@ -144,7 +141,7 @@ class Perceptron:
         for vertex, edges in graph.successors.items():
             for neigh in edges:
                 features += get_features(sentence, sentence[neigh], sentence[vertex][0],
-                                         self.callables_dict, self.idx_dict)
+                                         self.callables_dict, self.idx_dict, self.baseline)
 
         return features
 
@@ -153,7 +150,7 @@ class Perceptron:
         for idx, word in sentence.items():
             if idx == 0:
                 continue
-            features += get_features(sentence, word, word[3], self.callables_dict, self.idx_dict)
+            features += get_features(sentence, word, word[3], self.callables_dict, self.idx_dict, self.baseline)
 
         return features
 
@@ -233,6 +230,12 @@ class Perceptron:
         print("Test accuracy: %f" % self.test_accuracy)
         w_status = (np.sum(self.w > 0), np.sum(self.w < 0), np.sum(self.w == 0))
         print("Weights status: Pos=%d, Neg=%d, Zero=%d" % w_status)
+
+    def write_measures(self, iter_num):
+        with open('measures-' + self.model_name, 'a+') as handle:
+            if iter_num == 1:
+                handle.write("iteration, train_accuracy, test_accuracy \n")
+            handle.write("%d, %.4f, %.4f \n" % (iter_num, self.train_accuracy, self.test_accuracy))
 
     def get_accuracy(self, y_pred, y_true):
         true = 0

@@ -44,7 +44,7 @@ def multiple(key_in, key_out):
     return decorator
 
 
-def parse(tup, sentence):
+def parse(tup, sentence, baseline):
     """parse current sample feature components into shared dict"""
     parent_id = int(tup[3])
     child_id = int(tup[0])
@@ -52,7 +52,6 @@ def parse(tup, sentence):
     parent_pos = sentence[parent_id][2]
     child_word = tup[1]
     child_pos = tup[2]
-    # direction = 1 if parent_id - child_id > 0 else 0
     distance = calc_distance(parent_id, child_id)
 
     comp = {
@@ -62,9 +61,11 @@ def parse(tup, sentence):
         'parent_pos': parent_pos,
         'child_word': child_word,
         'child_pos': child_pos,
-        # 'direction': direction,
         'distance': distance
     }
+
+    if baseline:
+        return comp
 
     # optional
     if child_id < len(sentence) - 1:
@@ -79,7 +80,8 @@ def parse(tup, sentence):
     if parent_id > 1:
         comp['p_parent_pos'] = sentence[parent_id-1][2]
 
-    # in between
+    # between
+
     between = []
     for i in range(child_id+1, parent_id):
         word = sentence[i]
@@ -101,7 +103,7 @@ class FeatureFunction(ABC):
     def preprocess(self, data):
         for sentence in data:
             for i in range(1, len(sentence.keys())):
-                comp = parse(sentence[i], sentence)
+                comp = parse(sentence[i], sentence, self.baseline)
                 key = self.extract_key(comp)
                 if key is None:
                     continue
@@ -282,33 +284,12 @@ class PosNeighD(FeatureFunction):
 
 
 class PosBetween(FeatureFunction):
-    pass
 
+    @multiple('between', 'between_pos')
+    def extract_key(self, c):
+        key = (18, c['parent_pos'], c['between_pos'], c['child_pos'], c['distance'])
+        return key
 
-feature_functions = {
-    # unigram
-    'parent_word_pos': ParentWordPos,
-    'parent_word': ParentWord,
-    'parent_pos': ParentPos,
-    'child_word_pos': ChildWordPos,
-    'child_word': ChildWord,
-    'child_pos': ChildPos,
-    # bigram
-    'parent_child_word_pos': ParentChildWordPos,
-    'parent_pos_child_word_pos': ParentPosChildWordPos,
-    'parent_word_child_word_pos': ParentWordChildWordPos,
-    'parent_word_pos_child_pos': ParentWordPosChildPos,
-    'parent_word_pos_child_word': ParentWordPosChildWord,
-    'parent_child_word': ParentChildWord,
-    'parent_child_pos': ParentChildPos,
-    # extra
-    'pos_next_parent_previous_child': PosNeighA,
-    'pos_previous_parent_previous_child': PosNeighB,
-    'pos_next_parent_next_child': PosNeighC,
-    'pos_previous_parent_next_child': PosNeighD
-    # 'pos_parent_child_sibling': PosParentChildSibling,
-    # 'word_parent_child_sibling': WordParentChildSibling
-}
 
 feature_fncs = [
     # unigram
@@ -330,12 +311,12 @@ feature_fncs = [
     ('pos_next_parent_previous_child', PosNeighA),
     ('pos_previous_parent_previous_child', PosNeighB),
     ('pos_next_parent_next_child', PosNeighC),
-    ('pos_previous_parent_next_child', PosNeighD)
+    ('pos_previous_parent_next_child', PosNeighD),
+    ('pos_parent_between_child', PosBetween)
 ]
 
 
 def init_feature_functions(train_data, filter_dict, baseline):
-    callables_dict = OrderedDict()
     callables_tuple_list = []
     feature_counts = {}
     i = 0
@@ -369,10 +350,10 @@ def compute_features_size(callables_dict):
     return m
 
 
-def get_features(sentence, child, parent_id, callables_dict, idx_dict):
+def get_features(sentence, child, parent_id, callables_dict, idx_dict, baseline):
     feature_indices = []
     tup = [child[0], child[1], child[2], parent_id]
-    comp = parse(tup, sentence)
+    comp = parse(tup, sentence, baseline)
     for name, feature_function in callables_dict.items():
         feature_id = feature_function.get_enabled_feature(comp, idx_dict)
         if feature_id:
@@ -381,14 +362,14 @@ def get_features(sentence, child, parent_id, callables_dict, idx_dict):
     return feature_indices
 
 
-def debug_features(callables_dict, idx_dict, w, feature_counts, model_name):
+def debug_features(idx_dict, w, feature_counts, model_name):
     print("Debugging features")
     s = ""
     for i, elem in enumerate(w):
         if elem == 0:
             rev_idx_dict = dict((v, k) for k, v in idx_dict.items())
             s += "Feature " + str(rev_idx_dict[i]) + " , count: " + str(feature_counts[rev_idx_dict[i]]) + "\n"
-    with open("debug_features-" + model_name + ".log", 'w') as handle:
+    with open("debug_features-" + model_name + ".log", 'a+') as handle:
         handle.write(s)
     # for name, feature_functions in callables_dict.items():
     #     print("10% lowest features counts in " + name)
