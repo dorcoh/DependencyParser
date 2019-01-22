@@ -14,9 +14,6 @@ def calc_distance(id_a, id_b):
     return distance
 
 
-# feature templates decorators
-
-
 def optional(method):
     def wrapped(*args, **kw):
         try:
@@ -26,22 +23,6 @@ def optional(method):
             return None
 
     return wrapped
-
-
-def multiple(key_in, key_out):
-    """key_in is key of comp, key_out format is e.g., parent_pos, child_word (must have _identifier at end)"""
-    def decorator(method):
-        def wrapped(*args, **kw):
-            if key_in in args[1]:
-                for elem in args[1][key_in]:
-                    pos_or_word = key_out.split('_')[-1]
-                    idx = 2 if pos_or_word == 'pos' else 1
-                    args[1][key_out] = elem[idx]
-                if args[1][key_in]:
-                    return method(*args, **kw)
-            return None
-        return wrapped
-    return decorator
 
 
 def parse(tup, sentence, baseline):
@@ -79,16 +60,6 @@ def parse(tup, sentence, baseline):
 
     if parent_id > 1:
         comp['p_parent_pos'] = sentence[parent_id-1][2]
-
-    # between
-
-    between = []
-    for i in range(child_id+1, parent_id):
-        word = sentence[i]
-        between.append(word)
-
-    if between:
-        comp['between'] = between
 
     return comp
 
@@ -283,14 +254,6 @@ class PosNeighD(FeatureFunction):
         return key
 
 
-class PosBetween(FeatureFunction):
-
-    @multiple('between', 'between_pos')
-    def extract_key(self, c):
-        key = (18, c['parent_pos'], c['between_pos'], c['child_pos'], c['distance'])
-        return key
-
-
 feature_fncs = [
     # unigram
     ('parent_word_pos', ParentWordPos),
@@ -311,8 +274,7 @@ feature_fncs = [
     ('pos_next_parent_previous_child', PosNeighA),
     ('pos_previous_parent_previous_child', PosNeighB),
     ('pos_next_parent_next_child', PosNeighC),
-    ('pos_previous_parent_next_child', PosNeighD),
-    ('pos_parent_between_child', PosBetween)
+    ('pos_previous_parent_next_child', PosNeighD)
 ]
 
 

@@ -88,8 +88,7 @@ class Perceptron:
                 pickle_save(self.w, 'w-' + self.model_name + '.pickle')
                 self.iter_no_change = 0
                 if debug:
-                    debug_features(self.callables_dict, self.idx_dict, self.best_w, self.feature_counts,
-                                   self.model_name)
+                    debug_features(self.idx_dict, self.best_w, self.feature_counts, self.model_name)
             else:
                 self.iter_no_change += 1
 
