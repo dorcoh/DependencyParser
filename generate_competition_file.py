@@ -2,7 +2,6 @@ from parser.decoder import Data
 from parser.common import pickle_load, tag_comp
 from parser.classifier import Perceptron
 
-
 comp_file = Data('resources/comp.unlabeled', comp=True)
 f = pickle_load('features.pickle')
 w = pickle_load('w.pickle')
