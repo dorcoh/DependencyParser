@@ -18,8 +18,11 @@ class Perceptron:
         self.test_data = test_data
         self.features_idx = []
         self.ground_graphs = {}
+        self.ground_graphs_test = {}
         if not comp:
             self.get_ground_graphs(train_data)
+        if test_data:
+            self.ground_graphs_test = self.ground_graph_test(test_data)
         self.baseline = baseline
         self.early_stopping = early_stopping
         self.model_name = model_name
@@ -104,10 +107,11 @@ class Perceptron:
         graphs_mst = []
 
         for sentence in data:
-            if not self.comp:
-                graphs.append({'sent_graph': self.sentence_to_graph(sentence)})
-            else:
-                graphs.append({'sent_graph': self.sentence_to_graph_comp(sentence)})
+            # if not self.comp:
+            #     graphs.append({'sent_graph': self.sentence_to_graph(sentence)})
+            # else:
+            #     graphs.append({'sent_graph': self.sentence_to_graph_comp(sentence)})
+            graphs.append({'sent_graph': self.sentence_to_graph(sentence)})
 
         for idx, graph_dict in enumerate(graphs):
             weighted_graph = self.get_weighted_graph(graph_dict['sent_graph'])
@@ -243,7 +247,7 @@ class Perceptron:
         train_y_pred = self.predict(self.train_data)
         self.train_accuracy = self.get_accuracy(train_y_pred, train_y_true)
 
-        test_y_true = self.ground_graph_test(self.test_data)
+        test_y_true = self.ground_graphs_test
         test_y_pred = self.predict(self.test_data)
         self.test_accuracy = self.get_accuracy(test_y_pred, test_y_true)
 

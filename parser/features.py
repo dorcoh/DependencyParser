@@ -37,18 +37,6 @@ def multiple(key_in, key_out):
                     pos_or_word = key_out.split('_')[-1]
                     idx = 2 if pos_or_word == 'pos' else 1
                     args[1][key_out] = elem[idx]
-                    # add directions
-                    cid = args[1]['child_id']
-                    pid = args[1]['parent_id']
-                    sid = int(elem[0])
-                    # pc_dir = 1 if pid - cid > 0 else 0
-                    # cs_dir = 1 if cid - sid > 0 else 0
-                    # args[1]['direction'] = (pc_dir, cs_dir)
-                    # add distance
-                    pc_dir = calc_distance(pid, cid)
-                    cs_dir = calc_distance(cid, sid)
-                    args[1]['distance'] = (pc_dir, cs_dir)
-                    pass
                 if args[1][key_in]:
                     return method(*args, **kw)
             return None
@@ -91,17 +79,14 @@ def parse(tup, sentence):
     if parent_id > 1:
         comp['p_parent_pos'] = sentence[parent_id-1][2]
 
-    # check for child of child or sibling
-    # childs = []
-    # for idx, word in sentence.items():
-    #     if idx == 0:
-    #         continue
-    #     if word[3] == child_id or word[3] == parent_id:  # child's child or sibling
-    #         if word[0] != child_id:
-    #             childs.append(word)
-    # if childs:
-    #     comp['childs'] = childs
-    #
+    # in between
+    between = []
+    for i in range(child_id+1, parent_id):
+        word = sentence[i]
+        between.append(word)
+
+    if between:
+        comp['between'] = between
 
     return comp
 
@@ -296,20 +281,8 @@ class PosNeighD(FeatureFunction):
         return key
 
 
-# class PosParentChildSibling(FeatureFunction):
-#
-#     @multiple('childs', 'child_child_pos')
-#     def extract_key(self, c):
-#         key = (18, c['parent_pos'], c['child_pos'], c['child_child_pos'], c['distance'])
-#         return key
-#
-#
-# class WordParentChildSibling(FeatureFunction):
-#
-#     @multiple('childs', 'child_child_word')
-#     def extract_key(self, c):
-#         key = (19, c['parent_word'], c['child_word'], c['child_child_word'], c['distance'])
-#         return key
+class PosBetween(FeatureFunction):
+    pass
 
 
 feature_functions = {
