@@ -6,7 +6,7 @@ comp_file = Data('resources/test.labeled', comp=False)
 f = pickle_load('features.pickle')
 w = pickle_load('w.pickle')
 
-clf = Perceptron(features_tuple_pick=f, test_data=comp_file, comp=True, w=w)
+clf = Perceptron(features_tuple_pick=f, test_data=comp_file, comp=False, w=w)
 y_pred = clf.predict(comp_file)
 y_true = clf.ground_graph_test(comp_file)
 print(clf.get_accuracy(y_pred,y_true))
