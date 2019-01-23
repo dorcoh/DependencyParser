@@ -34,5 +34,9 @@ filter_dict_model = {
     'pos_next_parent_previous_child': 0,
     'pos_previous_parent_previous_child': 0,
     'pos_next_parent_next_child': 0,
-    'pos_previous_parent_next_child': 0
+    'pos_previous_parent_next_child': 0,
+    'pos_nn_parent_pp_child': 0,
+    'pos_pp_parent_pp_child': 0,
+    'pos_nn_parent_nn_child': 0,
+    'pos_pp_parent_nn_child': 0
 }

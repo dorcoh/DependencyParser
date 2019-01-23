@@ -51,15 +51,23 @@ def parse(tup, sentence, baseline):
     # optional
     if child_id < len(sentence) - 1:
         comp['n_child_pos'] = sentence[child_id+1][2]
+        if child_id < len(sentence) - 2:
+            comp['nn_child_pos'] = sentence[child_id + 2][2]
 
     if child_id > 1:
         comp['p_child_pos'] = sentence[child_id-1][2]
+        if child_id > 2:
+            comp['pp_child_pos'] = sentence[child_id-2][2]
 
     if parent_id < len(sentence) - 1:
         comp['n_parent_pos'] = sentence[parent_id+1][2]
+        if parent_id < len(sentence) - 2:
+            comp['nn_parent_pos'] = sentence[parent_id + 2][2]
 
     if parent_id > 1:
         comp['p_parent_pos'] = sentence[parent_id-1][2]
+        if parent_id > 2:
+            comp['pp_parent_pos'] = sentence[parent_id - 2][2]
 
     return comp
 
@@ -254,6 +262,38 @@ class PosNeighD(FeatureFunction):
         return key
 
 
+class PosNeighAA(FeatureFunction):
+
+    @optional
+    def extract_key(self, c):
+        key = (18, c['parent_pos'], c['nn_parent_pos'], c['pp_child_pos'], c['child_pos'], c['distance'])
+        return key
+
+
+class PosNeighBB(FeatureFunction):
+
+    @optional
+    def extract_key(self, c):
+        key = (19, c['pp_parent_pos'], c['parent_pos'], c['pp_child_pos'], c['child_pos'], c['distance'])
+        return key
+
+
+class PosNeighCC(FeatureFunction):
+
+    @optional
+    def extract_key(self, c):
+        key = (20, c['parent_pos'], c['nn_parent_pos'], c['child_pos'], c['nn_child_pos'], c['distance'])
+        return key
+
+
+class PosNeighDD(FeatureFunction):
+
+    @optional
+    def extract_key(self, c):
+        key = (21, c['pp_parent_pos'], c['parent_pos'], c['child_pos'], c['nn_child_pos'], c['distance'])
+        return key
+
+
 feature_fncs = [
     # unigram
     ('parent_word_pos', ParentWordPos),
@@ -274,7 +314,11 @@ feature_fncs = [
     ('pos_next_parent_previous_child', PosNeighA),
     ('pos_previous_parent_previous_child', PosNeighB),
     ('pos_next_parent_next_child', PosNeighC),
-    ('pos_previous_parent_next_child', PosNeighD)
+    ('pos_previous_parent_next_child', PosNeighD),
+    ('pos_nn_parent_pp_child', PosNeighAA),
+    ('pos_pp_parent_pp_child', PosNeighBB),
+    ('pos_nn_parent_nn_child', PosNeighCC),
+    ('pos_pp_parent_nn_child', PosNeighDD)
 ]
 
 
