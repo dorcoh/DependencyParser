@@ -67,7 +67,7 @@ class Data(Dataset):
                     else:
                         sentence[int(row[0])] = [int(row[0]), row[1], row[3], int(row[6])]
                 else:
-                    sentence[int(row[0])] = ([row[0], row[1], row[3]])
+                    sentence[int(row[0])] = ([int(row[0]), row[1], row[3]])
 
     def get_ground_tree(self):
         tree = []
