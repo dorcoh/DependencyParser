@@ -20,8 +20,9 @@ class Perceptron:
         self.ground_graphs = {}
         self.ground_graphs_test = {}
         if not comp:
-            self.get_ground_graphs(train_data)
-            self.ground_graphs_test = self.ground_graph_test(test_data)
+            if train_data is not None:
+                self.get_ground_graphs(train_data)
+                self.ground_graphs_test = self.ground_graph_test(test_data)
         self.baseline = baseline
         self.early_stopping = early_stopping
         self.model_name = model_name
