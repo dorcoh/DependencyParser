@@ -2,8 +2,7 @@
 
 
 ##### Usage
-- Predict test accuracies: `python predict_test_accuracy.py`
-- Generate tagged files: `python generate_competition_files.py`
+- Predict test accuracies: `python predict_test_accuracy.py
 - Train: `python main.py num_iterations baseline_or_model(1/0) early_stopping(1/0) model_name`
 
 ##### Dependencies:
